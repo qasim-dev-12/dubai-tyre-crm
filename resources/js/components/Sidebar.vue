@@ -3,9 +3,13 @@
   <aside class="main-sidebar">
     <!-- Brand Logo -->
     <router-link :to="{ name: 'home' }" class="brand-link">
-      <img v-if="appInfo" :src="appInfo.blackLogo" :alt="appInfo.companyName" class="lg-logo light-logo" />
+
+    <!-- HERE I cHANGED THE CODE -->
+
+      <!-- <img v-if="appInfo" :src="appInfo.blackLogo" :alt="appInfo.companyName" class="lg-logo light-logo" />
       <img v-if="appInfo" :src="appInfo.logo" :alt="appInfo.companyName" class="lg-logo dark-logo" />
-      <img v-if="appInfo" :src="appInfo.smallLogo" alt="appInfo.companyName" class="sm-logo" />
+      <img v-if="appInfo" :src="appInfo.smallLogo" alt="appInfo.companyName" class="sm-logo" /> -->
+      <p>800speedy</p>
     </router-link>
 
     <!-- Sidebar -->
@@ -43,12 +47,12 @@
       <nav class="py-3 pb-5" :class="{ 'd-none': menuSearchQuery }">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
           <li class="nav-header text-uppercase text-bold">
-            {{ $t("Dashboardddd") }}
+            {{ $t("Dashboard") }}
           </li>
           <li class="nav-item">
             <router-link :to="{ name: 'home' }" class="nav-link">
               <i class="nav-icon fas fa-home" />
-              <p>{{ $t("Dashboardddd") }}</p>
+              <p>{{ $t("Dashboard") }}</p>
             </router-link>
           </li>
           <li class="nav-header text-bold">{{ $t("ACTIVITIES") }}</li>
@@ -182,7 +186,8 @@
             $can('invoice-return-create') ||
             $can('invoice-return-view') ||
             $can('invoice-return-edit') ||
-            $can('invoice-return-delete')
+            $can('invoice-return-delete') ||
+            $can('job-list')
           " class="nav-item has-treeview" :class="menuOpen('quotations') ||
             menuOpen('invoices') ||
             menuOpen('invoiceReturns')
@@ -225,6 +230,15 @@
                   <p>{{ $t("Invoices List") }}</p>
                 </router-link>
               </li>
+              <li v-if="$can('job-list')" class="nav-item">
+                  <router-link :to="{ name: 'jobs.index' }" class="nav-link">
+    <i class="fas fa-briefcase nav-icon" />
+    <p>Jobs</p>
+  </router-link>
+              </li>
+
+
+
               <li v-if="$can('invoice-list') ||
                 $can('invoice-create') ||
                 $can('invoice-view') ||

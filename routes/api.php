@@ -60,6 +60,7 @@ use App\Http\Controllers\API\InventoryAdjustmentController;
 use App\Http\Controllers\API\MenuController;
 use App\Http\Controllers\API\LeadsController;
 use App\Http\Controllers\API\ServiceTypeController;
+use App\Http\Controllers\API\JobsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -216,7 +217,20 @@ Route::get('/service-types', [ServiceTypeController::class, 'index']);
     Route::delete('/leads/{slug}', [LeadsController::class, 'destroy']);
 
     Route::post('/leads/{slug}/convert', [LeadsController::class, 'convert']);
+Route::post('/leads/{slug}/convert', [LeadsController::class, 'convert']);
+Route::get('/jobs', [JobsController::class, 'index']);
+// Route::get('/technicians', function () {
+//     return \App\Models\User::select('id','name')->get();
+// });
+Route::put('/jobs/{id}/status', [JobsController::class, 'updateStatus']);
+Route::delete('/jobs/{id}', [JobsController::class, 'destroy']);
+Route::get('/jobs/{id}', [JobsController::class, 'show']);
+Route::get('/technicians', [EmployeeController::class, 'technicians']);
 
+// payment route
+Route::post('/jobs/{id}/payments', [JobsController::class, 'addPayment']);
+
+Route::post('/jobs/{id}/update-eta', [JobsController::class, 'updateEta']);
     // Balance routes
     Route::get('/balances/search', [BalanceController::class, 'search']);
     Route::get('/all-balances', [BalanceController::class, 'allBalances']);

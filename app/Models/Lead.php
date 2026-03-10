@@ -15,7 +15,7 @@ class Lead extends Model
         'name',
         'service_type_id',
         'area',
-        'charges',
+        'price',
         'mobile',
         'status',
         'slug',

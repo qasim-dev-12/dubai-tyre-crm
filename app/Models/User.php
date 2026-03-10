@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
+
 class User extends Authenticatable implements JWTSubject //, MustVerifyEmail
 {
     use Notifiable, HasPermissions;
@@ -90,6 +91,7 @@ class User extends Authenticatable implements JWTSubject //, MustVerifyEmail
     {
         $this->notify(new ResetPassword($token));
     }
+
 
     /**
      * Send the email verification notification.

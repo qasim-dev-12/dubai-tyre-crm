@@ -534,6 +534,22 @@ export default [
   component: page("leads/edit.vue"),
   meta: { permissions: ['lead-edit'] }
 },
+{
+  path: '/leads/:slug/convert',
+  name: 'leads.convert',
+  component: () => import('../pages/leads/convert.vue')
+},
+{
+  path: '/jobs',
+  name: 'jobs.index',
+  component: () => import('../pages/sales/jobs/index.vue')
+},
+{
+  path: '/jobs/:id',
+  name: 'jobs.show',
+  component: () => import('../pages/sales/jobs/show.vue')
+}
+,
   {
     path: "/cashbook/accounts/create",
     name: "accounts.create",

@@ -1,14 +1,18 @@
 <template>
   <div class="content-header">
     <div class="row align-items-center breadcrumbs-style">
-      <div class="col-sm-6">
+
+<!--
+   <div class="col-sm-6">
         <h3 class="m-0">
           {{ $t(current) }}
         </h3>
       </div>
+ -->
+
       <!-- /.col -->
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-right">
+      <div class="col-sm-12">
+        <ol class="breadcrumb float-sm-left">
           <li
             v-for="(data, index) in items"
             v-show="items"

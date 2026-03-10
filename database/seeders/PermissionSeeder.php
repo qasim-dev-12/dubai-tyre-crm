@@ -992,6 +992,33 @@ class PermissionSeeder extends Seeder
                     'guard_name' => 'Application Management',
                     'slug' => 'update-application',
                 ],
+
+                // job permission
+[
+    'name' => 'Create',
+    'guard_name' => 'Job Management',
+    'slug' => 'job-create',
+],
+[
+    'name' => 'List',
+    'guard_name' => 'Job Management',
+    'slug' => 'job-list',
+],
+[
+    'name' => 'Edit',
+    'guard_name' => 'Job Management',
+    'slug' => 'job-edit',
+],
+[
+    'name' => 'View',
+    'guard_name' => 'Job Management',
+    'slug' => 'job-view',
+],
+[
+    'name' => 'Delete',
+    'guard_name' => 'Job Management',
+    'slug' => 'job-delete',
+],
             ]);
         }
     }

@@ -168,4 +168,8 @@ class Client extends Model
     {
         return $this->phone;
     }
+    public function jobs()
+{
+    return $this->hasMany(Job::class);
+}
 }

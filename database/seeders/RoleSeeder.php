@@ -14,18 +14,19 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        // check if table is empty
-        if (DB::table('roles')->count() == 0) {
-            DB::table('roles')->insert([
-                [
-                    'name' => 'Developer',
-                    'slug' => 'developer',
-                ],
-                [
-                    'name' => 'Super Admin',
-                    'slug' => 'super-admin',
-                ],
-            ]);
-        }
+       DB::table('roles')->updateOrInsert(
+        ['slug' => 'developer'],
+        ['name' => 'Developer']
+    );
+
+    DB::table('roles')->updateOrInsert(
+        ['slug' => 'super-admin'],
+        ['name' => 'Super Admin']
+    );
+
+    DB::table('roles')->updateOrInsert(
+        ['slug' => 'technician'],
+        ['name' => 'Technician']
+    );
     }
 }

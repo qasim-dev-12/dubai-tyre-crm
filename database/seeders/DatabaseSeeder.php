@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
                 ClientSeeder::class,
                 VatRateSeeder::class,
                 MenuSeeder::class,
+                 DepartmentSeeder::class,
             ]);
         }
 

@@ -58,22 +58,27 @@
             </div>
 
             <!-- Area -->
-            <div class="col-md-3">
-              <label>Area</label>
-              <input
-                type="text"
-                v-model="form.area"
-                class="form-control"
-              />
-            </div>
-            <div class="form-group col-md-6">
-  <label>{{ $t('Vehicle Number') }}</label>
+           <div class="col-md-3">
+  <label>Area</label>
+  <v-select
+    :options="areas"
+    v-model="form.area"
+    placeholder="Search Dubai area..."
+    :filterable="true"
+    :clearable="true"
+  />
+</div>
+  <!-- Vehicle Number -->
+<div class="col-md-3 mt-3">
+  <label>Vehicle Number</label>
   <input
     v-model="form.vehicle_number"
     type="text"
-    class="form-control"
-    placeholder="e.g. ABC-1234"
+    class="form-control text-uppercase"
+    placeholder="ABC-1234"
+    style="letter-spacing:1px;"
   />
+  <small class="text-muted">Example: ABC-1234</small>
 </div>
 
             <!-- Charges -->
@@ -81,7 +86,7 @@
               <label>Charges</label>
               <input
                 type="number"
-                v-model="form.charges"
+                v-model="form.price"
                 class="form-control"
               />
             </div>
@@ -132,9 +137,14 @@
 
 <script>
 import axios from 'axios'
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css'
 
 export default {
+   components: { vSelect },
   data () {
+
+
     return {
       loading: false,
       serviceTypes: [],
@@ -147,14 +157,100 @@ export default {
         area: '',
         charges: '',
         mobile: '',
-        status: 'new',
+        status: 'New',
          vehicle_number: '', // ✅
       },
+
+    areas: [
+  "Al Barsha",
+  "Al Barsha 1",
+  "Al Barsha 2",
+  "Al Barsha 3",
+  "Al Barsha South",
+  "Al Furjan",
+  "Al Garhoud",
+  "Al Jaddaf",
+  "Al Karama",
+  "Al Khawaneej",
+  "Al Mamzar",
+  "Al Mizhar",
+  "Al Nahda",
+  "Al Quoz",
+  "Al Quoz 1",
+  "Al Quoz 2",
+  "Al Quoz 3",
+  "Al Quoz 4",
+  "Al Rashidiya",
+  "Al Rigga",
+  "Al Safa",
+  "Al Satwa",
+  "Al Sufouh",
+  "Al Twar",
+  "Arabian Ranches",
+  "Arabian Ranches 2",
+  "Arabian Ranches 3",
+  "Barsha Heights",
+  "Bluewaters Island",
+  "Business Bay",
+  "City Walk",
+  "DAMAC Hills",
+  "DAMAC Hills 2",
+  "Deira",
+  "Discovery Gardens",
+  "Downtown Dubai",
+  "Dubai Creek Harbour",
+  "Dubai Festival City",
+  "Dubai Hills Estate",
+  "Dubai Investment Park",
+  "Dubai Marina",
+  "Dubai Silicon Oasis",
+  "Dubai South",
+  "Emirates Hills",
+  "Garhoud",
+  "Green Community",
+  "International City",
+  "Jebel Ali",
+  "JLT",
+  "Jumeirah",
+  "Jumeirah 1",
+  "Jumeirah 2",
+  "Jumeirah 3",
+  "Jumeirah Beach Residence",
+  "Jumeirah Golf Estates",
+  "Jumeirah Islands",
+  "Jumeirah Park",
+  "Jumeirah Village Circle",
+  "Jumeirah Village Triangle",
+  "Knowledge Park",
+  "Liwan",
+  "Majan",
+  "Meydan",
+  "Motor City",
+  "Mirdif",
+  "Mudon",
+  "Nad Al Hamar",
+  "Nad Al Sheba",
+  "Palm Jumeirah",
+  "Remraam",
+  "Silicon Oasis",
+  "Sports City",
+  "The Greens",
+  "The Lakes",
+  "The Meadows",
+  "The Springs",
+  "The Sustainable City",
+  "Town Square",
+  "Umm Suqeim",
+  "Wasl Gate",
+  "World Trade Centre"
+],
+
     }
   },
 
   mounted () {
     this.fetchServiceTypes()
+     this.areas = [...this.areas]
   },
 
   methods: {

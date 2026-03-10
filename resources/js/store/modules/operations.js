@@ -46,10 +46,34 @@ export const mutations = {
 // Actions
 export const actions = {
   // Fetch Data
-  async fetchData ({ commit }, { path, currentPage }) {
-    const { data } = await axios.get(window.location.origin + path + currentPage)
-    commit(types.FETCH_DATA, { items: data, loading: false })
-  },
+ async fetchData({ commit }, { path, currentPage }) {
+
+  // 🔥 1. Set loading true immediately
+  commit(types.FETCH_DATA, { items: [], loading: true })
+
+  try {
+
+    const { data } = await axios.get(
+      window.location.origin + path + currentPage
+    )
+
+    // 🔥 2. Set new data
+    commit(types.FETCH_DATA, {
+      items: data,
+      loading: false
+    })
+
+  } catch (error) {
+
+    // 🔥 3. Stop loading on error
+    commit(types.FETCH_DATA, {
+      items: [],
+      loading: false
+    })
+
+  }
+},
+
 
   // Fetch Specific Logs
   async fetchSpecificLogs({ commit }, { path, currentPage, term = '', slug = null, modelName = null }) {

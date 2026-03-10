@@ -16,14 +16,15 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function current(Request $request)
-    {
-        return new UserResource($request->user());
-    }
+   public function current(Request $request)
+{
+    $user = $request->user()->load('roles', 'employee');
+    return new UserResource($user);
+}
 
     public function allUser(){
         $users = User::where('is_active', true)->get();
-    
+
         return AllUserResource::collection($users);
     }
 }

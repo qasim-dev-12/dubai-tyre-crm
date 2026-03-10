@@ -47,103 +47,129 @@ class EmployeeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        // validate request
-        $this->validate($request, [
-            'employeeName' => 'required|string|max:255',
-            'department' => 'required',
-            'designation' => 'required|string|max:255',
-            'salary' => 'required|numeric',
-            'commission' => 'nullable|numeric',
-            'mobileNumber' => 'required|string|max:20',
-            'birthDate' => 'required|date|date_format:Y-m-d|before:today',
-            'appointmentDate' => 'required|date|date_format:Y-m-d',
-            'joiningDate' => 'required|date|date_format:Y-m-d',
-            'gender' => 'required|string',
-            'bloodGroup' => 'nullable|string',
-            'religion' => 'nullable|string',
-            'address' => 'nullable|string|max:255',
-            'email' => $request->allowLogin == true ? 'required|string|email|max:255|unique:users,email' : 'nullable',
-            'password' => $request->allowLogin == true ? 'required|string|max:255|min:8' : 'nullable',
-            'role' => $request->allowLogin == true ? 'required' : 'nullable',
-        ]);
+   public function store(Request $request)
+{
+    $this->validate($request, [
+        'employeeName' => 'required|string|max:255',
+        'department' => 'required',
+        'designation' => 'required|string|max:255',
+        'salary' => 'required|numeric',
+        'commission' => 'nullable|numeric',
+        'mobileNumber' => 'required|string|max:20',
+        'birthDate' => 'required|date|date_format:Y-m-d|before:today',
+        'appointmentDate' => 'required|date|date_format:Y-m-d',
+        'joiningDate' => 'required|date|date_format:Y-m-d',
+        'gender' => 'required|string',
+        'bloodGroup' => 'nullable|string',
+        'religion' => 'nullable|string',
+        'address' => 'nullable|string|max:255',
+        'email' => $request->allowLogin == true || $request->designation === 'Technician'
+            ? 'required|string|email|max:255|unique:users,email'
+            : 'nullable',
+        'password' => $request->allowLogin == true || $request->designation === 'Technician'
+            ? 'required|string|min:8'
+            : 'nullable',
+        'role' => $request->allowLogin == true ? 'nullable' : 'nullable',
+    ]);
 
-        try {
-            DB::beginTransaction();
-            
-            // generate code
-            $code = 1;
-            $lastEmployee = Employee::latest()->first();
-            if ($lastEmployee) {
-                $code = $lastEmployee->emp_id + 1;
-            }
+    try {
+        DB::beginTransaction();
 
-            // upload thumbnail and set the name
-            $imageName = '';
-            if ($request->image) {
-                $imageName = time() . '.' . explode('/', explode(':', substr($request->image, 0, strpos($request->image, ';')))[1])[1];
-                Image::make($request->image)->save(public_path('images/employees/') . $imageName);
-            }
+        // 🔹 Generate employee code
+        $code = 1;
+        $lastEmployee = Employee::latest()->first();
+        if ($lastEmployee) {
+            $code = $lastEmployee->emp_id + 1;
+        }
 
-            // create a user if allowLogin is true
-            if ($request->allowLogin == true) {
-                // get role
+        // 🔹 Handle image upload
+        $imageName = '';
+        if ($request->image) {
+            $imageName = time() . '.' .
+                explode('/', explode(':', substr($request->image, 0, strpos($request->image, ';')))[1])[1];
+
+            Image::make($request->image)
+                ->save(public_path('images/employees/') . $imageName);
+        }
+
+        // 🔹 Decide if login should be created
+        $shouldCreateLogin = false;
+
+        if ($request->designation === 'Technician') {
+            $shouldCreateLogin = true;
+        } elseif ($request->allowLogin == true) {
+            $shouldCreateLogin = true;
+        }
+
+        $user = null;
+
+        if ($shouldCreateLogin) {
+
+            // If Technician → auto assign technician role
+            if ($request->designation === 'Technician') {
+                $role = Role::where('slug', 'technician')->first();
+            } else {
                 $role = Role::where('slug', $request->role['slug'])->first();
-                // store user
-                $user = User::create([
-                    'name' => $request->employeeName,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                    'account_role' => 0,
-                ]);
-                $user->roles()->attach($role->id);
-                $user->permissions()->attach($user->roles[0]->permissions);
             }
 
-            // create employee
-            $employee =   Employee::create([
+            $user = User::create([
                 'name' => $request->employeeName,
-                'emp_id' => $code,
-                'department_id' => $request->department['id'],
-                'designation' => $request->designation,
-                'salary' => $request->salary,
-                'commission' => $request->commission,
-                'mobile_number' => $request->mobileNumber,
-                'birth_date' => $request->birthDate,
-                'gender' => $request->gender,
-                'blood_group' => $request->bloodGroup,
-                'religion' => $request->religion,
-                'appointment_date' => $request->appointmentDate,
-                'joining_date' => $request->joiningDate,
-                'address' => $request->address,
-                'status' => $request->status,
-                'image_path' => $imageName,
-                'user_id' => isset($user) ? $user->id : null,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'account_role' => 0,
             ]);
 
-            // add activity log
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($employee)
-                ->withProperties([
-                    'name' => "",
-                    'code' => '[' . $request->employeeName . ']',
-                    'event' => 'Create',
-                    'slug' => $employee->slug,
-                    'routeName' => 'employees.show'
-                ])
-                ->useLog('Employee Created')
-                ->log('Employee Created');
+            $user->roles()->attach($role->id);
 
-            DB::commit();
-
-            return $this->responseWithSuccess('Employee added successfully');
-        } catch (Exception $e) {
-            DB::rollback();
-            return $this->responseWithError($e->getMessage());
+            if ($user->roles->count() > 0) {
+                $user->permissions()->attach($user->roles[0]->permissions);
+            }
         }
+
+        // 🔹 Create employee
+        $employee = Employee::create([
+            'name' => $request->employeeName,
+            'emp_id' => $code,
+            'department_id' => $request->department['id'],
+            'designation' => $request->designation,
+            'salary' => $request->salary,
+            'commission' => $request->commission,
+            'mobile_number' => $request->mobileNumber,
+            'birth_date' => $request->birthDate,
+            'gender' => $request->gender,
+            'blood_group' => $request->bloodGroup,
+            'religion' => $request->religion,
+            'appointment_date' => $request->appointmentDate,
+            'joining_date' => $request->joiningDate,
+            'address' => $request->address,
+            'status' => $request->status,
+            'image_path' => $imageName,
+            'user_id' => $user ? $user->id : null,
+        ]);
+
+        // 🔹 Activity log
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($employee)
+            ->withProperties([
+                'name' => "",
+                'code' => '[' . $request->employeeName . ']',
+                'event' => 'Create',
+                'slug' => $employee->slug,
+                'routeName' => 'employees.show'
+            ])
+            ->useLog('Employee Created')
+            ->log('Employee Created');
+
+        DB::commit();
+
+        return $this->responseWithSuccess('Employee added successfully');
+
+    } catch (Exception $e) {
+        DB::rollback();
+        return $this->responseWithError($e->getMessage());
     }
+}
 
     /**
      * Display the specified resource.
@@ -447,4 +473,12 @@ class EmployeeController extends Controller
 
         return SalaryIncrementResource::collection($allIncrements);
     }
+
+    public function technicians()
+{
+    return Employee::where('designation', 'Technician')
+        ->where('status', 1)
+        ->select('id', 'name')
+        ->get();
+}
 }

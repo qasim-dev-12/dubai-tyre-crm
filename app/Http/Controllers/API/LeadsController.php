@@ -7,6 +7,9 @@ use App\Models\Lead;
 use App\Models\ServiceType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Models\Job;
+use App\Models\Client;
 
 class LeadsController extends Controller
 {
@@ -80,9 +83,9 @@ public function index(Request $request)
         'name'             => 'required|string|max:255',
         'service_type_id'  => 'required|exists:service_types,id',
         'area'             => 'nullable|string|max:255',
-        'charges'          => 'nullable|numeric',
+        'price'          => 'nullable|numeric',
         'mobile'           => 'required|string|max:20',
-        'status'           => 'required|string',
+      'status' => 'required|in:New,In Progress,Cancelled',
         'vehicle_number'  => 'required|string|max:255', // ✅
     ]);
 
@@ -112,12 +115,26 @@ public function index(Request $request)
 public function update(Request $request, $slug)
 {
     $lead = Lead::where('slug', $slug)->firstOrFail();
-    $lead->update($request->all());
+
+    $validated = $request->validate([
+        'salutation'       => 'nullable|string|max:10',
+        'name'             => 'required|string|max:255',
+        'service_type_id'  => 'required|exists:service_types,id',
+        'area'             => 'nullable|string|max:255',
+        'price'          => 'nullable|numeric',
+        'mobile'           => 'required|string|max:20',
+        'status'           => 'required|in:New,In Progress,Converted,Cancelled',
+        'vehicle_number'   => 'required|string|max:255',
+    ]);
+
+    $lead->update($validated);
 
     return response()->json([
-        'message' => 'Lead updated successfully'
+        'message' => 'Lead updated successfully',
+        'data'    => $lead
     ]);
 }
+
 
     /**
      * Update a lead
@@ -138,19 +155,93 @@ public function update(Request $request, $slug)
     /**
      * Convert lead
      */
-   public function convert($slug)
+public function convert(Request $request, $slug)
 {
     $lead = Lead::where('slug', $slug)->firstOrFail();
 
-    // ✅ Always force Converted
-    $lead->update([
-        'status' => 'Converted',
+    $validated = $request->validate([
+        'salutation'       => 'nullable|string|max:10',
+        'name'             => 'required|string|max:255',
+        'service_type_id'  => 'required|exists:service_types,id',
+        'area'             => 'nullable|string|max:255',
+        'price'            => 'nullable|numeric',
+        'mobile'           => 'required|string|max:20',
+        'vehicle_number'   => 'required|string|max:255',
+        'technician_id'    => 'required|exists:employees,id',
+        'location_url'     => 'nullable|string',
+
+
     ]);
 
-    return response()->json([
-        'message' => 'Lead converted successfully',
-        'data' => $lead,
-    ]);
+    DB::beginTransaction();
+
+    try {
+
+        // ✅ 1. Update lead with edited values
+        $lead->update([
+            'salutation'      => $validated['salutation'],
+            'name'            => $validated['name'],
+            'service_type_id' => $validated['service_type_id'],
+            'area'            => $validated['area'],
+            'price'           => $validated['price'],
+            'mobile'          => $validated['mobile'],
+            'vehicle_number'  => $validated['vehicle_number'],
+            'status'          => 'Converted',
+        ]);
+
+        // ✅ Create or get client using mobile as unique field
+$client = Client::firstOrCreate(
+    ['phone' => $validated['mobile']], // UNIQUE FIELD
+    [
+        'name'      => $validated['name'],
+        'slug'      => Str::uuid(),
+        'client_id' => 'CL-' . rand(1000,9999),
+        'status'    => 1
+    ]
+);
+
+$isNewClient = $client->wasRecentlyCreated;
+
+        // ✅ 2. Create job using edited values
+        $job = Job::create([
+
+            'salutation'      => $validated['salutation'],
+            'name'            => $validated['name'],
+            'mobile'          => $validated['mobile'],
+            'service_type_id' => $validated['service_type_id'],
+            'area'            => $validated['area'],
+            'price'           => $validated['price'],
+            'vehicle_number'  => $validated['vehicle_number'],
+            'technician_id'   => $validated['technician_id'],
+            'location_url'    => $validated['location_url'] ?? null,
+        //   'status' => 'DCC', // always start from first workflow step
+'paid_amount' => 0,
+'due_amount' => $validated['price'],
+'payment_status' => 'Unpaid',
+            'client_id' => $client->id,
+
+        ]);
+
+        DB::commit();
+
+      return response()->json([
+    'message'       => 'Lead converted successfully',
+    'client_status' => $isNewClient ? 'created' : 'existing',
+    'client_message'=> $isNewClient
+                        ? 'Client created successfully'
+                        : 'Client already exists',
+    'client'        => $isNewClient ? null : $client, // only send data if existing
+    'job'           => $job
+]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Conversion failed',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
 }
+
 
 }

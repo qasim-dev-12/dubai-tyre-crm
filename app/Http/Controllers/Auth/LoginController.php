@@ -81,10 +81,10 @@ class LoginController extends Controller
     {
         $user = $this->guard()->user();
         $otp = rand(100000, 999999);
-        
+
         // Get OTP expiration time from settings (default to 2 minutes if not set)
         $otpExpirationTime = getOtpExpirationTime();
-        
+
         $user->update(['otp_code' => $otp, 'otp_expires_at' => now()->addMinutes($otpExpirationTime)]);
         $user->notify(new OtpNotification($otp, $otpExpirationTime));
     }
@@ -151,19 +151,31 @@ class LoginController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function sendLoginResponse(Request $request)
-    {
-        $this->clearLoginAttempts($request);
+   protected function sendLoginResponse(Request $request)
+{
+    $this->clearLoginAttempts($request);
 
-        $token = (string) $this->guard()->getToken();
-        $expiration = $this->guard()->getPayload()->get('exp');
+    $token = (string) $this->guard()->getToken();
+    $expiration = $this->guard()->getPayload()->get('exp');
 
-        return response()->json([
-            'token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => $expiration - time(),
-        ]);
-    }
+    $user = $this->guard()->user()->load('roles', 'employee');
+
+    return response()->json([
+        'token' => $token,
+        'token_type' => 'bearer',
+        'expires_in' => $expiration - time(),
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $user->roles->pluck('slug'),
+            'employee' => $user->employee ? [
+                'id' => $user->employee->id,
+                'designation' => $user->employee->designation
+            ] : null
+        ]
+    ]);
+}
 
     /**
      * Get the failed login response instance.

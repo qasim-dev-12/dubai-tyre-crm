@@ -88,6 +88,7 @@
                 type="number"
                 v-model="form.price"
                 class="form-control"
+                 :readonly="isNewTyre"
               />
             </div>
 
@@ -112,6 +113,35 @@
 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
+            <!-- New Tyre Fields -->
+<div v-if="isNewTyre" class="row mt-3">
+
+  <div class="col-md-3">
+    <label>Brand</label>
+    <input v-model="form.brand" type="text" class="form-control" />
+  </div>
+
+  <div class="col-md-3">
+    <label>Size</label>
+    <input v-model="form.size" type="text" class="form-control" />
+  </div>
+
+  <div class="col-md-3">
+    <label>Buying Price</label>
+    <input v-model="form.buying_price" type="number" class="form-control" />
+  </div>
+
+  <div class="col-md-3">
+    <label>Selling Price</label>
+    <input v-model="form.selling_price" type="number" class="form-control" />
+  </div>
+
+  <div class="col-md-3 mt-3">
+    <label>Service Charges</label>
+    <input v-model="form.service_charges" type="number" class="form-control" />
+  </div>
+
+</div>
 
           </div>
 
@@ -141,10 +171,9 @@ import vSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css'
 
 export default {
-   components: { vSelect },
+  components: { vSelect },
+
   data () {
-
-
     return {
       loading: false,
       serviceTypes: [],
@@ -155,13 +184,19 @@ export default {
         name: '',
         service_type_id: '',
         area: '',
-        charges: '',
+        price: '',
         mobile: '',
         status: 'New',
-         vehicle_number: '', // ✅
+        vehicle_number: '',
+
+        brand: '',
+        size: '',
+        buying_price: '',
+        selling_price: '',
+        service_charges: ''
       },
 
-    areas: [
+         areas: [
   "Al Barsha",
   "Al Barsha 1",
   "Al Barsha 2",
@@ -244,13 +279,35 @@ export default {
   "Wasl Gate",
   "World Trade Centre"
 ],
-
     }
   },
 
+  // ✅ computed
+  computed: {
+    isNewTyre () {
+      const selected = this.serviceTypes.find(
+        s => s.id === this.form.service_type_id
+      )
+      return selected && selected.name.toLowerCase() === 'new tyre'
+    }
+  },
+
+  // ✅ mounted (INSIDE component)
   mounted () {
     this.fetchServiceTypes()
-     this.areas = [...this.areas]
+    this.areas = [...this.areas]
+  },
+
+  // ✅ watch (SEPARATE, not inside computed)
+  watch: {
+    'form.selling_price': 'calculateTotal',
+    'form.service_charges': 'calculateTotal',
+
+    'form.service_type_id' () {
+      if (!this.isNewTyre) {
+        this.form.price = ''
+      }
+    }
   },
 
   methods: {
@@ -263,17 +320,20 @@ export default {
       }
     },
 
+    calculateTotal () {
+      const sell = parseFloat(this.form.selling_price) || 0
+      const service = parseFloat(this.form.service_charges) || 0
+      this.form.price = sell + service
+    },
+
     async submit () {
       if (this.loading) return
       this.loading = true
-      this.errors = {}
 
       try {
         await axios.post('/api/leads', this.form)
-
         this.safeToast('Lead created successfully', 'success')
 
-        // IMPORTANT: delay navigation for page transition
         setTimeout(() => {
           this.$router.push({ name: 'leads.index' })
         }, 400)
@@ -288,7 +348,6 @@ export default {
       }
     },
 
-    // ✅ SAFE TOAST HELPER (THIS IS THE KEY)
     safeToast (message, type = 'success') {
       this.$nextTick(() => {
         if (this.$toast && typeof this.$toast[type] === 'function') {

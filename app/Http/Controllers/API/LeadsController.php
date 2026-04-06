@@ -87,6 +87,12 @@ public function index(Request $request)
         'mobile'           => 'required|string|max:20',
       'status' => 'required|in:New,In Progress,Cancelled',
         'vehicle_number'  => 'required|string|max:255', // ✅
+         // ✅ ADD THESE
+    'brand'            => 'nullable|string|max:255',
+    'size'             => 'nullable|string|max:255',
+    'buying_price'     => 'nullable|numeric',
+    'selling_price'    => 'nullable|numeric',
+    'service_charges'  => 'nullable|numeric',
     ]);
 
     $validated['slug'] = Str::uuid(); // ✅ UNIQUE SLUG
@@ -125,6 +131,11 @@ public function update(Request $request, $slug)
         'mobile'           => 'required|string|max:20',
         'status'           => 'required|in:New,In Progress,Converted,Cancelled',
         'vehicle_number'   => 'required|string|max:255',
+        'brand'            => 'nullable|string|max:255',
+'size'             => 'nullable|string|max:255',
+'buying_price'     => 'nullable|numeric',
+'selling_price'    => 'nullable|numeric',
+'service_charges'  => 'nullable|numeric',
     ]);
 
     $lead->update($validated);

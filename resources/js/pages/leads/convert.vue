@@ -129,18 +129,22 @@
 </div> -->
 
 
+
             <!-- Embedded Map -->
-            <div class="col-md-12 mt-4">
-              <label>Location Preview (Dubai)</label>
-              <iframe
-                width="100%"
-                height="350"
-                style="border:1px solid #ddd; border-radius:8px;"
-                loading="lazy"
-                allowfullscreen
-                src="https://www.google.com/maps?q=Dubai&output=embed">
-              </iframe>
-            </div>
+<div class="col-md-12 mt-4">
+
+  <!-- 🔍 SEARCH BOX -->
+  <input
+    id="searchBox"
+    type="text"
+    class="form-control mb-2"
+    placeholder="Search location (e.g. Dubai Marina)"
+  />
+
+  <!-- 🗺️ MAP -->
+  <div id="map" style="width:100%; height:350px; border-radius:8px;"></div>
+
+</div>
 
             <!-- Google Maps Link Input -->
             <div class="col-md-12 mt-3">
@@ -193,6 +197,8 @@ export default {
     await this.fetchLead()
     await this.fetchServiceTypes()
     await this.fetchTechnicians()
+    // this.initMap()
+    this.loadGoogleMaps()
   },
 
   methods: {
@@ -276,8 +282,71 @@ async submit() {
     );
 
   }
-}
+},
+initMap() {
+  const dubai = { lat: 25.2048, lng: 55.2708 }
 
+  this.map = new google.maps.Map(document.getElementById("map"), {
+    center: dubai,
+    zoom: 10
+  })
+
+  this.marker = new google.maps.Marker({
+    position: dubai,
+    map: this.map
+  })
+
+  // 🔍 AUTOCOMPLETE SEARCH
+  const input = document.getElementById("searchBox")
+  const autocomplete = new google.maps.places.Autocomplete(input)
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace()
+
+    if (!place.geometry) return
+
+    const location = place.geometry.location
+    const lat = location.lat()
+    const lng = location.lng()
+
+    // Move map
+    this.map.panTo(location)
+    this.map.setZoom(15)
+
+    // Move marker
+    this.marker.setPosition(location)
+
+    // Fill input
+    this.form.location_url = `https://www.google.com/maps?q=${lat},${lng}`
+  })
+
+  // 🖱️ CLICK EVENT
+  this.map.addListener("click", (event) => {
+    const lat = event.latLng.lat()
+    const lng = event.latLng.lng()
+
+    this.marker.setPosition({ lat, lng })
+
+    this.form.location_url = `https://www.google.com/maps?q=${lat},${lng}`
+  })
+},
+  loadGoogleMaps() {
+  if (window.google && window.google.maps) {
+    this.initMap()
+    return
   }
+
+  const script = document.createElement("script")
+  script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyBvbFI5rXSS1Rc63EOewwNfucmTAcrjLZw&libraries=places"
+  script.async = true
+  script.defer = true
+
+  script.onload = () => {
+    this.initMap()
+  }
+
+  document.head.appendChild(script)
+}
+}
 }
 </script>

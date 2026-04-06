@@ -83,6 +83,11 @@
                     <th>Mobile</th>
                     <th>Status</th>
                     <th>Vehicle No</th>
+                  <th >Brand</th>
+<th >Size</th>
+<th >Buying</th>
+<th >Selling</th>
+<th >Service</th>
                     <th class="text-right">Action</th>
                   </tr>
                 </thead>
@@ -145,6 +150,15 @@
                     </td>
 
                     <td>{{ lead.vehicle_number }}</td>
+
+
+
+
+<td>{{ lead.brand || '-' }}</td>
+<td>{{ lead.size || '-' }}</td>
+<td>{{ lead.buying_price || '-' }}</td>
+<td>{{ lead.selling_price || '-' }}</td>
+<td>{{ lead.service_charges || '-' }}</td>
 
                     <td class="text-right">
                       <div class="btn-group">
@@ -257,6 +271,11 @@ export default {
 
   computed: {
     ...mapGetters("operations", ["items", "loading", "pagination"]),
+     hasTyreData () {
+    return this.items.some(
+      lead => lead.service_type?.name === 'New Tyre'
+    )
+  },
 
     exportUrl() {
       return `/leads/export/excel?term=${this.query}&status=${this.statusFilter}`;

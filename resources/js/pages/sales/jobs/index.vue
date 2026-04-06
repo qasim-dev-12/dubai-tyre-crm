@@ -246,6 +246,7 @@
 
     <input v-model="paymentForm.reference_number" class="form-control mb-2" placeholder="Reference (optional)">
     <textarea v-model="paymentForm.notes" class="form-control mb-2" placeholder="Notes"></textarea>
+    <input type="file" @change="handleFileUpload" class="form-control mb-2">
 
    <div class="modal-actions">
   <button class="btn btn-secondary" @click="closePaymentModal">
@@ -296,7 +297,8 @@ export default {
         amount: '',
         payment_method: '',
         reference_number: '',
-        notes: ''
+        notes: '',
+         receipt: null
       }
     };
   },
@@ -316,6 +318,9 @@ export default {
 
 
   methods: {
+    handleFileUpload(event) {
+  this.paymentForm.receipt = event.target.files[0];
+},
 
 
 openPaymentModal(job) {
@@ -335,7 +340,26 @@ closePaymentModal() {
 
 async submitPayment() {
   try {
-    await axios.post(`/api/jobs/${this.selectedJob.id}/payments`, this.paymentForm);
+    const formData = new FormData();
+
+    formData.append("amount", this.paymentForm.amount);
+    formData.append("payment_method", this.paymentForm.payment_method);
+    formData.append("reference_number", this.paymentForm.reference_number);
+    formData.append("notes", this.paymentForm.notes);
+
+    if (this.paymentForm.receipt) {
+      formData.append("receipt", this.paymentForm.receipt);
+    }
+
+    await axios.post(
+      `/api/jobs/${this.selectedJob.id}/payments`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
 
     this.$toast.success("Payment added");
     this.closePaymentModal();

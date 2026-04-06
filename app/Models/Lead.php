@@ -20,6 +20,11 @@ class Lead extends Model
         'status',
         'slug',
         'vehicle_number', // ✅ ADD THIS
+         'brand',
+    'size',
+    'buying_price',
+    'selling_price',
+    'service_charges'
     ];
 
     public function serviceType()

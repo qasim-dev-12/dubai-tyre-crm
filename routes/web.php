@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PDFGeneratorController;
+use App\Http\Controllers\API\JobsController;
 use App\Models\Invoice;
 
 use function GuzzleHttp\Promise\all;
@@ -36,3 +37,4 @@ Route::get('/system-info', function () {
 Route::get('/invoice/pdf/{slug}', [PDFGeneratorController::class, 'generateInvoicePDF'])->name('email.invoice.pdf');
 Route::get('/purchase/pdf/{slug}', [PDFGeneratorController::class, 'generatePurchasePDF'])->name('email.purchase.pdf');
 Route::get('/quotation/pdf/{slug}', [PDFGeneratorController::class, 'generateQuotationPDF'])->name('email.quotation.pdf');
+

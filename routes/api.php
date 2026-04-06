@@ -452,5 +452,7 @@ Route::group(['middleware' => 'guest:api'], function () {
     Route::post('oauth/{driver}', [OAuthController::class, 'redirect']);
     Route::get('oauth/{driver}/callback', [OAuthController::class, 'handleCallback'])->name('oauth.callback');
 });
+Route::post('/payments/{id}', [JobsController::class, 'updatePayment']);
+Route::delete('/payments/{id}', [JobsController::class, 'deletePayment']);
 
 

@@ -12,11 +12,16 @@ class Payment extends Model
         'amount',
         'payment_method',
         'reference_number',
-        'notes'
+        'notes',
+         'receipt' // ✅ ADD THIS
     ];
 
     public function job()
     {
         return $this->belongsTo(Job::class);
     }
+    public function payments()
+{
+    return $this->hasMany(Payment::class);
+}
 }

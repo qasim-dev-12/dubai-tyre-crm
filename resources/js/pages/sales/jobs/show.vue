@@ -127,6 +127,102 @@
 </div>
 
 </div>
+
+<div class="mt-4">
+  <h5>Payment History</h5>
+
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Amount</th>
+        <th>Method</th>
+        <th>Reference</th>
+        <th>Notes</th>
+        <th>Receipt</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr v-for="payment in job?.payments || []" :key="payment.id">
+        <td>{{ payment.amount }}</td>
+        <td>{{ payment.payment_method }}</td>
+        <td>{{ payment.reference_number || '-' }}</td>
+        <td>{{ payment.notes || '-' }}</td>
+
+        <!-- RECEIPT -->
+        <td>
+          <a
+            v-if="payment.receipt"
+            :href="`/storage/${payment.receipt}?t=${Date.now()}`"
+            target="_blank"
+            class="btn btn-sm btn-primary"
+          >
+            View
+          </a>
+
+          <span v-else>-</span>
+        </td>
+        <td>
+  <!-- VIEW -->
+  <a
+    v-if="payment.receipt"
+    :href="`/storage/${payment.receipt}?t=${Date.now()}`"
+    target="_blank"
+    class="btn btn-sm btn-primary"
+  >
+    View
+  </a>
+
+  <!-- EDIT -->
+ <button class="btn btn-sm btn-warning" @click="openEdit(payment)">
+  Edit
+</button>
+
+  <!-- DELETE -->
+  <button
+    class="btn btn-sm btn-danger"
+    @click="deletePayment(payment.id)"
+  >
+    Delete
+  </button>
+</td>
+      </tr>
+
+      <tr v-if="!job.payments || job.payments.length === 0">
+        <td colspan="5" class="text-center">
+          No Payments Found
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div v-if="showEditModal" class="modal-overlay">
+  <div class="modal-box">
+
+    <h4>Edit Payment</h4>
+
+    <input v-model="editForm.amount" placeholder="Amount" class="form-control mb-2" />
+
+    <select v-model="editForm.payment_method" class="form-control mb-2">
+      <option>Cash</option>
+      <option>Bank Transfer</option>
+      <option>POS</option>
+    </select>
+
+    <input v-model="editForm.reference_number" placeholder="Reference" class="form-control mb-2" />
+
+    <textarea v-model="editForm.notes" placeholder="Notes" class="form-control mb-2"></textarea>
+
+    <input type="file" @change="handleFile" class="form-control mb-2" />
+
+    <div class="d-flex justify-content-between mt-3">
+      <button class="btn btn-secondary" @click="showEditModal=false">Cancel</button>
+      <button class="btn btn-primary" @click="updatePayment">Update</button>
+    </div>
+
+  </div>
+</div>
+</div>
+
   </div>
 </template>
 
@@ -136,7 +232,18 @@ import axios from "axios";
 export default {
   data() {
     return {
-      job: null
+      job: null,
+
+
+    showEditModal: false,
+    editForm: {
+      id: null,
+      amount: '',
+      payment_method: '',
+      reference_number: '',
+      notes: '',
+      receipt: null
+    }
     };
   },
 
@@ -150,15 +257,72 @@ export default {
 
   methods: {
     statusClass(status) {
-      const map = {
-        Assigned: "bg-primary",
-        Started: "bg-info",
-        "In Progress": "bg-warning",
-        Completed: "bg-success",
-        Cancelled: "bg-danger"
-      };
-      return map[status] || "bg-secondary";
+    const map = {
+      Assigned: "bg-primary",
+      Started: "bg-info",
+      "In Progress": "bg-warning",
+      Completed: "bg-success",
+      Cancelled: "bg-danger"
+    };
+    return map[status] || "bg-secondary";
+  },
+  handleFile(e) {
+  this.editForm.receipt = e.target.files[0];
+},
+
+  // 🟡 DELETE
+  async deletePayment(id) {
+    if (!confirm("Delete this payment?")) return;
+
+    await axios.delete(`/api/payments/${id}`);
+
+    // reload job
+    this.reloadJob();
+  },
+
+  // 🟡 EDIT (simple prompt version)
+async updatePayment() {
+  const formData = new FormData();
+
+  formData.append('amount', this.editForm.amount);
+  formData.append('payment_method', this.editForm.payment_method);
+  formData.append('reference_number', this.editForm.reference_number || '');
+  formData.append('notes', this.editForm.notes || '');
+
+  if (this.editForm.receipt) {
+    formData.append('receipt', this.editForm.receipt);
+  }
+
+  await axios.post(`/api/payments/${this.editForm.id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
     }
+  });
+
+  this.showEditModal = false;
+
+  // ✅ ADD DELAY HERE
+  setTimeout(() => {
+    this.reloadJob();
+  }, 500);
+},
+  openEdit(payment) {
+  this.editForm.id = payment.id;
+  this.editForm.amount = payment.amount;
+  this.editForm.payment_method = payment.payment_method;
+  this.editForm.reference_number = payment.reference_number;
+  this.editForm.notes = payment.notes;
+  this.editForm.receipt = null;
+
+  this.showEditModal = true;
+},
+
+  // 🔄 reload data
+  async reloadJob() {
+    const id = this.$route.params.id;
+    const { data } = await axios.get(`/api/jobs/${id}`);
+    this.job = data.data;
+  }
   }
 };
 </script>
@@ -209,6 +373,24 @@ export default {
 
 .timeline-content small {
   color: #777;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  border-radius: 10px;
 }
 
 </style>

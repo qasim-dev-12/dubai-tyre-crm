@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use Illuminate\Http\Request;
 use App\Models\JobJourney;
+use App\Models\Payment;
+use Illuminate\Support\Facades\Storage;
 
 
 
@@ -120,7 +122,9 @@ public function show($id)
    $job = Job::with([
         'serviceType',
         'technician',
-        'journeys'
+        'journeys',
+        'payments'
+
     ])->findOrFail($id);
 
     return response()->json([
@@ -131,10 +135,11 @@ public function addPayment(Request $request, $id)
 {
     $job = Job::findOrFail($id);
 
-    $request->validate([
-        'amount' => 'required|numeric|min:1',
-        'payment_method' => 'required|in:Cash,Bank Transfer,POS,POL'
-    ]);
+  $request->validate([
+    'amount' => 'required|numeric|min:1',
+    'payment_method' => 'required|in:Cash,Bank Transfer,POS,POL',
+    'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048' // ✅ ADD
+]);
 
     if ($job->payment_status === 'Paid') {
         return response()->json([
@@ -147,13 +152,18 @@ public function addPayment(Request $request, $id)
             'message' => 'Amount exceeds due amount'
         ], 422);
     }
+$receiptPath = null;
 
-    $payment = $job->payments()->create([
-        'amount' => $request->amount,
-        'payment_method' => $request->payment_method,
-        'reference_number' => $request->reference_number,
-        'notes' => $request->notes,
-    ]);
+if ($request->hasFile('receipt')) {
+    $receiptPath = $request->file('receipt')->store('receipts', 'public');
+}
+   $payment = $job->payments()->create([
+    'amount' => $request->amount,
+    'payment_method' => $request->payment_method,
+    'reference_number' => $request->reference_number,
+    'notes' => $request->notes,
+    'receipt' => $receiptPath // ✅ ADD THIS
+]);
 
     $totalPaid = $job->payments()->sum('amount');
 
@@ -236,6 +246,50 @@ JobJourney::create([
         'message' => 'ETA updated successfully',
         'data' => $job
     ]);
+}
+
+public function updatePayment(Request $request, $id)
+{
+    $payment = Payment::findOrFail($id);
+
+    $request->validate([
+        'amount' => 'required|numeric|min:1',
+        'payment_method' => 'required',
+        'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+    ]);
+
+    $payment->amount = $request->amount;
+    $payment->payment_method = $request->payment_method;
+    $payment->reference_number = $request->reference_number;
+    $payment->notes = $request->notes;
+
+    // Handle receipt update
+    if ($request->hasFile('receipt')) {
+
+        // delete old file
+        if ($payment->receipt && Storage::disk('public')->exists($payment->receipt)) {
+            Storage::disk('public')->delete($payment->receipt);
+        }
+
+        $payment->receipt = $request->file('receipt')->store('receipts', 'public');
+    }
+
+    $payment->save();
+
+    return response()->json(['message' => 'Payment updated']);
+}
+public function deletePayment($id)
+{
+    $payment = Payment::findOrFail($id);
+
+    // delete receipt file
+    if ($payment->receipt && Storage::disk('public')->exists($payment->receipt)) {
+        Storage::disk('public')->delete($payment->receipt);
+    }
+
+    $payment->delete();
+
+    return response()->json(['message' => 'Payment deleted']);
 }
 
 

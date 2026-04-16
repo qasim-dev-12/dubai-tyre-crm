@@ -14,76 +14,50 @@
 
       <div class="card-body" v-if="job">
 
-      <div class="row">
+     <div v-if="job" class="excel-style">
 
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <p class="label">Name</p>
-      <div class="value">{{ job.name }}</div>
+  <div class="row mb-2">
+    <div class="col-md-2 label">Name</div>
+    <div class="col-md-4 value">{{ job.name }}</div>
+
+    <div class="col-md-2 label">Area</div>
+    <div class="col-md-4 value">{{ job.area }}</div>
+  </div>
+
+  <div class="row mb-2">
+    <div class="col-md-2 label">Mobile</div>
+    <div class="col-md-4 value">{{ job.mobile }}</div>
+
+    <div class="col-md-2 label">Vehicle</div>
+    <div class="col-md-4 value">{{ job.vehicle_number }}</div>
+  </div>
+
+  <div class="row mb-2">
+    <div class="col-md-2 label">Service Type</div>
+    <div class="col-md-4 value">{{ job.service_type?.name }}</div>
+
+    <div class="col-md-2 label">Technician</div>
+    <div class="col-md-4 value">{{ job.technician?.name }}</div>
+  </div>
+
+  <div class="row mb-2">
+    <div class="col-md-2 label">Price</div>
+    <div class="col-md-4 value">{{ job.price }}</div>
+
+    <div class="col-md-2 label">Status</div>
+    <div class="col-md-4 value">
+      <span :class="['badge', statusClass(job.status)]">
+        {{ job.status }}
+      </span>
     </div>
   </div>
 
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Mobile</div>
-      <div class="value">{{ job.mobile }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Service</div>
-      <div class="value">{{ job.service_type?.name }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6   mb-4">
-    <div class="info-box">
-      <div class="label">Area</div>
-      <div class="value">{{ job.area }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Vehicle</div>
-      <div class="value">{{ job.vehicle_number }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Technician</div>
-      <div class="value">{{ job.technician?.name }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Price</div>
-      <div class="value">{{ job.price }}</div>
-    </div>
-  </div>
-
-  <div class="col-md-3 col-sm-6 mb-4">
-    <div class="info-box">
-      <div class="label">Status</div>
-      <div class="value">
-        <span :class="['badge', statusClass(job.status)]">
-          {{ job.status }}
-        </span>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12" v-if="job.location_url">
-    <div class="info-box">
-      <div class="label">Location</div>
-      <div class="value">
-        <a :href="job.location_url" target="_blank">
-          View on Map
-        </a>
-      </div>
+  <div class="row mb-2" v-if="job.location_url">
+    <div class="col-md-2 label">Location</div>
+    <div class="col-md-10 value">
+      <a :href="job.location_url" target="_blank">
+        View on Map
+      </a>
     </div>
   </div>
 
@@ -392,5 +366,21 @@ async updatePayment() {
   width: 400px;
   border-radius: 10px;
 }
+.excel-style {
+  background: #fff;
+  padding: 10px;
+}
 
+.label {
+  font-weight: 600;
+  background: #f1f1f1;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.value {
+  padding: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+}
 </style>

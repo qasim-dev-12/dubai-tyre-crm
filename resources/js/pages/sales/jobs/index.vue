@@ -42,7 +42,14 @@
                 <tbody>
                   <tr v-for="(job, i) in safeItems" :key="job.id">
 
-                    <td>{{ i + 1 }}</td>
+                    <td>
+  <span v-if="pagination && pagination.current_page > 1">
+    {{
+      pagination.per_page * (pagination.current_page - 1) + (i + 1)
+    }}
+  </span>
+  <span v-else>{{ i + 1 }}</span>
+</td>
                     <td>{{ job.name }}</td>
                     <td>{{ job.service_type?.name }}</td>
                     <td>{{ job.area }}</td>
@@ -188,13 +195,6 @@
 
     </div>
   </td>
-  <td>
-  {{ job.technician_id }} -
-  {{ $store.state.auth.employeeId }}
-</td>
-<td>
-  {{ isAssignedTechnician(job) }}
-</td>
 
 
                   </tr>
@@ -210,6 +210,29 @@
             </div>
 
           </div>
+          <div class="card-footer">
+  <div class="d-flex justify-content-between align-items-center">
+
+    <!-- Per Page -->
+    <div>
+      <label>Per Page</label>
+      <select v-model="perPage" @change="updatePerPage" class="form-control form-control-sm">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+
+    <!-- Pagination -->
+    <pagination
+      v-if="pagination && pagination.last_page > 1"
+      :pagination="pagination"
+      :offset="5"
+      @paginate="paginate"
+    />
+  </div>
+</div>
 
         </div>
       </div>
@@ -278,7 +301,7 @@ export default {
    mounted() {
     console.log("AUTH STATE:", this.$store.state.auth);
     console.log("USER:", this.$store.state.auth.user);
-     this.getData();
+     this.getData(true);
 
  setInterval(() => {
     this.$forceUpdate();
@@ -304,7 +327,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters("operations", ["items", "loading"]),
+    ...mapGetters("operations", ["items", "loading", "pagination"]),
     safeItems() {
     return this.items || [];
   }
@@ -373,12 +396,16 @@ async submitPayment() {
 
 
 
-    async getData() {
-      await this.$store.dispatch("operations/fetchData", {
-        path: "/api/jobs?",
-        currentPage: `perPage=${this.perPage}`,
-      });
-    },
+   async getData(resetPage = false) {
+  const page = resetPage ? 1 : this.pagination?.current_page || 1;
+
+  await this.$store.dispatch("operations/fetchData", {
+    path: "/api/jobs?",
+    currentPage:
+      `page=${page}` +
+      `&perPage=${this.perPage}`,
+  });
+},
 
 async deleteJob(id) {
   if (!confirm("Delete this job?")) return;
@@ -502,7 +529,13 @@ debouncedUpdateEta(job) {
   }, 600);
 
 }
+,paginate() {
+  this.getData();
+},
 
+updatePerPage() {
+  this.getData(true);
+},
 
 
   }

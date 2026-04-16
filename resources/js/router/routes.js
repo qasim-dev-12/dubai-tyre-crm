@@ -542,12 +542,14 @@ export default [
 {
   path: '/jobs',
   name: 'jobs.index',
-  component: () => import('../pages/sales/jobs/index.vue')
+  component: () => import('../pages/sales/jobs/index.vue'),
+  middleware: 'auth'
 },
 {
   path: '/jobs/:id',
   name: 'jobs.show',
-  component: () => import('../pages/sales/jobs/show.vue')
+  component: () => import('../pages/sales/jobs/show.vue'),
+  middleware: 'auth'
 }
 ,
   {

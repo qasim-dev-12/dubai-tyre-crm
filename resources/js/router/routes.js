@@ -546,6 +546,12 @@ export default [
   middleware: 'auth'
 },
 {
+  path: '/jobs/create',
+  name: 'jobs.create',
+  component: () => import('../pages/sales/jobs/create.vue'),
+  middleware: 'auth'
+},
+{
   path: '/jobs/:id',
   name: 'jobs.show',
   component: () => import('../pages/sales/jobs/show.vue'),

@@ -180,8 +180,11 @@ public function convert(Request $request, $slug)
         'vehicle_number'   => 'required|string|max:255',
         'technician_id'    => 'required|exists:employees,id',
         'location_url'     => 'nullable|string',
-
-
+        'brand'            => 'nullable|string|max:255',
+        'size'             => 'nullable|string|max:255',
+        'buying_price'     => 'nullable|numeric',
+        'selling_price'    => 'nullable|numeric',
+        'service_charges'  => 'nullable|numeric'
     ]);
 
     DB::beginTransaction();
@@ -215,7 +218,6 @@ $isNewClient = $client->wasRecentlyCreated;
 
         // ✅ 2. Create job using edited values
         $job = Job::create([
-
             'salutation'      => $validated['salutation'],
             'name'            => $validated['name'],
             'mobile'          => $validated['mobile'],
@@ -225,12 +227,15 @@ $isNewClient = $client->wasRecentlyCreated;
             'vehicle_number'  => $validated['vehicle_number'],
             'technician_id'   => $validated['technician_id'],
             'location_url'    => $validated['location_url'] ?? null,
-        //   'status' => 'DCC', // always start from first workflow step
-'paid_amount' => 0,
-'due_amount' => $validated['price'],
-'payment_status' => 'Unpaid',
+            'paid_amount' => 0,
+            'due_amount' => $validated['price'],
+            'payment_status' => 'Unpaid',
+            'brand' => $validated['brand'] ?? null,
+            'size' => $validated['size'] ?? null,
+            'buying_price' => $validated['buying_price'] ?? null,
+            'selling_price' => $validated['selling_price'] ?? null,
+            'service_charges' => $validated['service_charges'] ?? null,
             'client_id' => $client->id,
-
         ]);
 
         DB::commit();

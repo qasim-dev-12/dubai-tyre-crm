@@ -44,6 +44,7 @@
                 v-model="form.service_type_id"
                 class="form-control"
                 required
+                @change="onServiceTypeChange"
               >
                 <option value="">Select Service</option>
                 <option
@@ -83,6 +84,7 @@
                 type="number"
                 v-model="form.price"
                 class="form-control"
+                :readonly="isNewTyre"
               />
             </div>
 
@@ -95,6 +97,38 @@
                 class="form-control"
                 required
               />
+            </div>
+
+            <!-- New Tyre Extra Fields -->
+            <div v-if="isNewTyre" class="w-100 mt-4">
+              <div class="row p-3 bg-light rounded">
+                <h6 class="w-100 mb-3">Tyre Details</h6>
+
+                <div class="col-md-3">
+                  <label>Brand</label>
+                  <input v-model="form.brand" type="text" class="form-control" placeholder="Tyre Brand" />
+                </div>
+
+                <div class="col-md-3">
+                  <label>Size</label>
+                  <input v-model="form.size" type="text" class="form-control" placeholder="e.g., 175/65R14" />
+                </div>
+
+                <div class="col-md-3">
+                  <label>Buying Price</label>
+                  <input v-model="form.buying_price" type="number" class="form-control" placeholder="Cost Price" step="0.01" />
+                </div>
+
+                <div class="col-md-3">
+                  <label>Selling Price</label>
+                  <input v-model="form.selling_price" type="number" class="form-control" placeholder="Selling Price" step="0.01" @input="calculateTyrePrice" />
+                </div>
+
+                <div class="col-md-3 mt-3">
+                  <label>Service Charges</label>
+                  <input v-model="form.service_charges" type="number" class="form-control" placeholder="Service Charges" step="0.01" @input="calculateTyrePrice" />
+                </div>
+              </div>
             </div>
 
             <!-- Technician -->
@@ -201,7 +235,33 @@ export default {
     this.loadGoogleMaps()
   },
 
+  computed: {
+    isNewTyre () {
+      const selected = this.serviceTypes.find(s => s.id === this.form.service_type_id)
+      return selected && selected.name.toLowerCase() === 'new tyre'
+    }
+  },
+
   methods: {
+
+    onServiceTypeChange () {
+      if (!this.isNewTyre) {
+        this.form.brand = ''
+        this.form.size = ''
+        this.form.buying_price = ''
+        this.form.selling_price = ''
+        this.form.service_charges = ''
+        this.form.price = ''
+      }
+    },
+
+    calculateTyrePrice () {
+      if (this.isNewTyre) {
+        const selling = parseFloat(this.form.selling_price) || 0
+        const service = parseFloat(this.form.service_charges) || 0
+        this.form.price = selling + service
+      }
+    },
 
     async fetchLead () {
       try {
@@ -218,7 +278,12 @@ export default {
           vehicle_number: lead.vehicle_number,
           technician_id: '',
           location_url: '',
-           status: 'Assigned' // default
+          status: 'Assigned', // default
+          brand: lead.brand || '',
+          size: lead.size || '',
+          buying_price: lead.buying_price || '',
+          selling_price: lead.selling_price || '',
+          service_charges: lead.service_charges || ''
         }
       } catch (e) {
         this.$toast.error('Failed to load lead')

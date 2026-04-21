@@ -39,9 +39,14 @@ class Job extends Model
         'paid_amount',
         'due_amount',
         'payment_status',
-       'eta_minutes',
-'eta_started_at',
-
+        'eta_minutes',
+        'eta_started_at',
+        'brand',
+        'size',
+        'buying_price',
+        'selling_price',
+        'service_charges',
+        'client_id'
     ];
        protected $casts = [
         'on_the_way_at' => 'datetime',

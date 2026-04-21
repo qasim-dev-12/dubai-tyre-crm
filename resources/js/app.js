@@ -56,6 +56,7 @@ Vue.use(DateRangePicker)
 
 // vue v-select
 import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css'
 Vue.component('VSelect', vSelect)
 
 // vue moment js

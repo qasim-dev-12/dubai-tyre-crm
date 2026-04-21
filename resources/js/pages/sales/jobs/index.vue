@@ -7,6 +7,12 @@
           <!-- Header -->
           <div class="card-header d-flex justify-content-between">
             <h4>Jobs</h4>
+            <router-link
+              :to="{ name: 'jobs.create' }"
+              class="btn btn-primary btn-sm"
+            >
+              <i class="fas fa-plus"></i> Create Job
+            </router-link>
           </div>
 
           <!-- Body -->
@@ -30,7 +36,7 @@
     <th>Location</th>
     <th>Status</th>
     <th>Payment</th>
-      <th>Payment Method</th>
+
     <th>Updated Eta</th>         <!-- Show current -->
     <th>Update Status</th>
      <!-- Dropdown -->
@@ -109,15 +115,7 @@
 </td>
 
 
-<td>
-  <span v-if="job?.payment?.payment_method">
-    {{ job?.payment?.payment_method }}
-  </span>
 
-  <span v-else class="text-muted">
-    -
-  </span>
-</td>
 
 <!-- Technician: Can Edit -->
 <td>
@@ -163,35 +161,47 @@
    <td class="text-right">
     <div class="btn-group">
 
-      <!-- View -->
-      <router-link
-        :to="{ name: 'jobs.show', params: { id: job.id } }"
-        class="btn btn-primary btn-sm"
-      >
-        <i class="fas fa-eye"></i>
-      </router-link>
 
-      <!-- Edit -->
-      <router-link
-        :to="{ name: 'jobs.edit', params: { id: job.id } }"
-        class="btn btn-info btn-sm"
-      >
-        <i class="fas fa-edit"></i>
-      </router-link>
+     <!-- View -->
+<router-link
+  :to="{ name: 'jobs.show', params: { id: job.id } }"
+  class="btn btn-primary btn-sm"
+  data-bs-toggle="tooltip"
+  title="View"
+>
+  <i class="fas fa-eye"></i>
+</router-link>
+
+<!-- Edit -->
+<router-link
+  :to="{ name: 'jobs.edit', params: { id: job.id } }"
+  class="btn btn-info btn-sm"
+  data-bs-toggle="tooltip"
+  title="Edit"
+>
+  <i class="fas fa-edit"></i>
+</router-link>
+
+<!-- Payment -->
 <button
   class="btn btn-success btn-sm"
   @click="openPaymentModal(job)"
   :disabled="job.payment_status === 'Paid'"
+  data-bs-toggle="tooltip"
+  title="Add Payment"
 >
   <i class="fas fa-money-bill"></i>
 </button>
-      <!-- Delete -->
-      <button
-        class="btn btn-danger btn-sm"
-        @click="deleteJob(job.id)"
-      >
-        <i class="fas fa-trash"></i>
-      </button>
+
+<!-- Delete -->
+<button
+  class="btn btn-danger btn-sm"
+  @click="deleteJob(job.id)"
+  data-bs-toggle="tooltip"
+  title="Delete"
+>
+  <i class="fas fa-trash"></i>
+</button>
 
     </div>
   </td>
@@ -302,6 +312,10 @@ export default {
     console.log("AUTH STATE:", this.$store.state.auth);
     console.log("USER:", this.$store.state.auth.user);
      this.getData(true);
+      this.$nextTick(() => {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el))
+  })
 
  setInterval(() => {
     this.$forceUpdate();

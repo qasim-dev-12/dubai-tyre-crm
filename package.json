@@ -25,6 +25,7 @@
     "js-cookie": "^2.2.1",
     "jspdf": "2.5.1",
     "moment": "^2.29.4",
+    "playwright": "^1.59.1",
     "popper.js": "^1.12",
     "sweetalert2": "^8.19.1",
     "v-clipboard": "^2.2.3",

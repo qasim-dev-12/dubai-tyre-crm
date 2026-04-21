@@ -219,6 +219,7 @@ Route::get('/service-types', [ServiceTypeController::class, 'index']);
     Route::post('/leads/{slug}/convert', [LeadsController::class, 'convert']);
 Route::post('/leads/{slug}/convert', [LeadsController::class, 'convert']);
 Route::get('/jobs', [JobsController::class, 'index']);
+Route::post('/jobs', [JobsController::class, 'store']);
 // Route::get('/technicians', function () {
 //     return \App\Models\User::select('id','name')->get();
 // });

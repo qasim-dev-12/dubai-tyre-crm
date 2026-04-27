@@ -4,9 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Job;
-use Illuminate\Http\Request;
 use App\Models\JobJourney;
 use App\Models\Payment;
+use App\Models\ServiceType;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -62,11 +63,23 @@ class JobsController extends Controller
             'technician_id' => 'nullable|exists:employees,id',
             'status' => 'nullable|in:Assigned,DCC,On The Way,Reached,Job Started,Job Completed',
             'brand' => 'nullable|string|max:255',
+            'tyre_width' => 'nullable|string|max:10',
+            'tyre_height' => 'nullable|string|max:10',
+            'tyre_rim' => 'nullable|string|max:10',
             'size' => 'nullable|string|max:255',
             'buying_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
             'service_charges' => 'nullable|numeric|min:0'
         ]);
+
+        $serviceType = ServiceType::find($request->service_type_id);
+        if ($serviceType && strtolower($serviceType->name) === 'new tyre') {
+            $request->validate([
+                'tyre_width' => 'required|string|max:10',
+                'tyre_height' => 'required|string|max:10',
+                'tyre_rim' => 'required|string|max:10',
+            ]);
+        }
 
         try {
             $job = Job::create([
@@ -82,7 +95,10 @@ class JobsController extends Controller
                 'due_amount' => $request->price ?? 0,
                 'payment_status' => 'Unpaid',
                 'brand' => $request->brand,
-                'size' => $request->size,
+                'tyre_width' => $request->tyre_width,
+                'tyre_height' => $request->tyre_height,
+                'tyre_rim' => $request->tyre_rim,
+                'size' => $request->size ?? ($request->tyre_width && $request->tyre_height && $request->tyre_rim ? "{$request->tyre_width}/{$request->tyre_height}R{$request->tyre_rim}" : null),
                 'buying_price' => $request->buying_price,
                 'selling_price' => $request->selling_price,
                 'service_charges' => $request->service_charges

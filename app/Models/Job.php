@@ -42,6 +42,9 @@ class Job extends Model
         'eta_minutes',
         'eta_started_at',
         'brand',
+        'tyre_width',
+        'tyre_height',
+        'tyre_rim',
         'size',
         'buying_price',
         'selling_price',
@@ -55,7 +58,17 @@ class Job extends Model
         'job_completed_at' => 'datetime',
          'eta_started_at' => 'datetime:c',
     ];
-public function client()
+
+    public function getSizeAttribute($value)
+    {
+        if ($this->tyre_width && $this->tyre_height && $this->tyre_rim) {
+            return "{$this->tyre_width}/{$this->tyre_height}R{$this->tyre_rim}";
+        }
+
+        return $value;
+    }
+
+    public function client()
 {
     return $this->belongsTo(Client::class);
 }

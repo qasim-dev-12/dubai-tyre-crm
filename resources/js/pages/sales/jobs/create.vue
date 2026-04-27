@@ -141,12 +141,69 @@
                 </div>
 
                 <div class="col-md-3 mb-3">
+                  <label class="form-label">Width</label>
+                  <select
+                    v-model="form.width"
+                    class="form-control"
+                    @change="onWidthChange"
+                  >
+                    <option value="" disabled>Select width</option>
+                    <option
+                      v-for="width in tyreOptions.widths"
+                      :key="width"
+                      :value="width"
+                    >
+                      {{ width }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Height</label>
+                  <select
+                    v-model="form.height"
+                    class="form-control"
+                    :disabled="!form.width"
+                    @change="onHeightChange"
+                  >
+                    <option value="" disabled>Select height</option>
+                    <option
+                      v-for="height in availableHeights()"
+                      :key="height"
+                      :value="height"
+                    >
+                      {{ height }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Rim</label>
+                  <select
+                    v-model="form.rim"
+                    class="form-control"
+                    :disabled="!form.height"
+                    @change="onRimChange"
+                  >
+                    <option value="" disabled>Select rim</option>
+                    <option
+                      v-for="rim in availableRims()"
+                      :key="rim"
+                      :value="rim"
+                    >
+                      {{ rim }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-3 mb-3">
                   <label class="form-label">Size</label>
                   <input
                     v-model="form.size"
                     type="text"
                     class="form-control"
-                    placeholder="e.g., 175/65R14"
+                    readonly
+                    placeholder="Select width, height and rim"
                   />
                 </div>
 
@@ -303,6 +360,36 @@ export default {
         "Wasl Gate",
         "World Trade Centre"
       ],
+      tyreOptions: {
+        widths: ['175', '185', '195', '205', '215'],
+        heights: {
+          '175': ['60', '65', '70'],
+          '185': ['55', '60', '65'],
+          '195': ['55', '60', '65', '70'],
+          '205': ['50', '55', '60', '65'],
+          '215': ['45', '50', '55', '60']
+        },
+        rims: {
+          '175-60': ['14', '15'],
+          '175-65': ['14', '15'],
+          '175-70': ['14', '15'],
+          '185-55': ['15', '16'],
+          '185-60': ['15', '16'],
+          '185-65': ['15', '16'],
+          '195-55': ['15', '16'],
+          '195-60': ['15', '16'],
+          '195-65': ['15', '16'],
+          '195-70': ['15', '16'],
+          '205-50': ['15', '16'],
+          '205-55': ['15', '16'],
+          '205-60': ['15', '16'],
+          '205-65': ['15', '16'],
+          '215-45': ['16', '17'],
+          '215-50': ['16', '17'],
+          '215-55': ['16', '17'],
+          '215-60': ['16', '17']
+        }
+      },
       form: {
         name: '',
         mobile: '',
@@ -313,6 +400,9 @@ export default {
         technician: null,
         status: 'Assigned',
         brand: '',
+        width: '',
+        height: '',
+        rim: '',
         size: '',
         buying_price: '',
         selling_price: '',
@@ -334,11 +424,39 @@ export default {
       if (!this.isNewTyre) {
         // Clear tyre fields if service type is not "New Tyre"
         this.form.brand = ''
+        this.form.width = ''
+        this.form.height = ''
+        this.form.rim = ''
         this.form.size = ''
         this.form.buying_price = ''
         this.form.selling_price = ''
         this.form.service_charges = ''
         this.form.price = ''
+      }
+    },
+    availableHeights() {
+      return this.tyreOptions.heights[this.form.width] || []
+    },
+    availableRims() {
+      return this.tyreOptions.rims[`${this.form.width}-${this.form.height}`] || []
+    },
+    onWidthChange() {
+      this.form.height = ''
+      this.form.rim = ''
+      this.form.size = ''
+    },
+    onHeightChange() {
+      this.form.rim = ''
+      this.form.size = ''
+    },
+    onRimChange() {
+      this.updateTyreSize()
+    },
+    updateTyreSize() {
+      if (this.form.width && this.form.height && this.form.rim) {
+        this.form.size = `${this.form.width}/${this.form.height}R${this.form.rim}`
+      } else {
+        this.form.size = ''
       }
     },
     calculateTyrePrice() {
@@ -379,6 +497,9 @@ export default {
           technician_id: this.form.technician?.id || null,
           status: this.form.status,
           brand: this.form.brand || null,
+          tyre_width: this.form.width || null,
+          tyre_height: this.form.height || null,
+          tyre_rim: this.form.rim || null,
           size: this.form.size || null,
           buying_price: this.form.buying_price || null,
           selling_price: this.form.selling_price || null,

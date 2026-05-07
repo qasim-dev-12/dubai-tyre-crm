@@ -192,10 +192,15 @@ class RoleController extends Controller
      */
     public function allRoles()
     {
-        if (auth()->user()->roles[0]->slug != 'developer') {
-            $allRoles = Role::with('permissions')->where('slug', '!=', 'developer')->where('slug', '!=', 'super-admin')->latest()->get();
-        } else {
+        $user = auth()->user();
+
+        if ($user->hasRole('developer') || $user->hasRole('super-admin')) {
             $allRoles = Role::with('permissions')->latest()->get();
+        } else {
+            $allRoles = Role::with('permissions')
+                ->whereNotIn('slug', ['developer', 'super-admin'])
+                ->latest()
+                ->get();
         }
 
         return RoleResource::collection($allRoles);

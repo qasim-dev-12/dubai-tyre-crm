@@ -50,15 +50,11 @@ class ProSubCatController extends Controller
         ]);
         try {
             // generate code
-            $code = 1;
-            $prevCode = ProductSubCategory::latest()->first();
-            if ($prevCode) {
-                $code = $prevCode->code + 1;
-            }
+           $code = $request->code;
             // store sub category
             $ProductSubCategory =  ProductSubCategory::create([
                 'name' => $request->name,
-                'code' => $code,
+                  'code' => $request->code,
                 'cat_id' => $request->category['id'],
                 'note' => clean($request->note),
                 'status' => $request->status,
@@ -116,6 +112,7 @@ class ProSubCatController extends Controller
             'name' => 'required|string|max:50|unique:product_sub_categories,name,' . $subCategory->id,
             'category' => 'required',
             'note' => 'nullable|string|max:255',
+              'code' => 'required|string|max:50|unique:product_sub_categories,code',
         ]);
 
         try {
@@ -196,7 +193,7 @@ class ProSubCatController extends Controller
         } elseif ($filterType === 'inactive') {
             $query->where('status', 0);
         }
-    
+
         // Apply term search
         if (!empty($term)) {
             $query->where(function ($q) use ($term) {
@@ -207,7 +204,7 @@ class ProSubCatController extends Controller
                   });
             });
         }
-    
+
         $result = $query->latest()->paginate($request->perPage);
 
         return ProductSubCategoryResource::collection($result);

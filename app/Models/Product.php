@@ -185,4 +185,20 @@ class Product extends Model
     {
         return $this->belongsTo(VatRate::class, 'tax_id');
     }
+
+    /**
+     * Get technician battery stocks for this product.
+     */
+    public function technicianBatteryStocks()
+    {
+        return $this->hasMany(TechnicianBatteryStock::class);
+    }
+
+    /**
+     * Get technician battery movements for this product.
+     */
+    public function technicianBatteryMovements()
+    {
+        return $this->hasMany(TechnicianBatteryMovement::class);
+    }
 }

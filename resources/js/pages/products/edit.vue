@@ -21,14 +21,14 @@
               <div class="row">
                 <div class="form-group col-md-12 col-xl-12">
                   <div class="btn-group btn-group-toggle w-25" data-toggle="buttons">
-                    <label 
+                    <label
                       class="btn btn-outline-custom"
                       :class="{ 'btn-custom-active': form.itemType === 'product' }">
                       <input type="radio" id="product" name="itemType" v-model="form.itemType" value="product" autocomplete="off">
                       {{ $t('Product') }}
                     </label>
 
-                    <label 
+                    <label
                       class="btn btn-outline-custom"
                       :class="{ 'btn-custom-active': form.itemType === 'service' }">
                       <input type="radio" id="service" name="itemType" v-model="form.itemType" value="service" autocomplete="off">
@@ -52,8 +52,15 @@
                   <has-error :form="form" field="itemModel" />
                 </div>
                 <div class="form-group col-md-6 col-xl-3">
+                  <label>Product Type</label>
+                  <select v-model="form.productType" class="form-control">
+                    <option value="tyre">Tyre</option>
+                    <option value="battery">Battery</option>
+                  </select>
+                </div>
+                <div class="form-group col-md-6 col-xl-3">
                   <div class="input-group">
-                    <label for="itemCode" class="col-md-12">{{ $t('Item code') }}
+                    <label for="itemCode" class="col-md-12">{{ $t('Item code') }}"
                       <span class="required">*</span></label>
                     <div class="input-group-prepend">
                       <span v-if="prefix" class="input-group-text" id="basic-addon1">{{ prefix }}</span>
@@ -82,20 +89,19 @@
                 </div>
 
                 <div v-if="items" class="form-group col-md-6 col-xl-4">
-                  <label for="subCategory">{{ $t('Sub Category') }}
-                    <span class="required">*</span></label>
+                  <label for="subCategory">{{ $t('Sub Category') }}</label>
                   <v-select v-model="form.subCategory" :options="items" label="name"
                     :class="{ 'is-invalid': form.errors.has('subCategory') }" name="subCategory"
-                    :placeholder="$t('Select a category')" />
+                    :placeholder="$t('Select a sub category')" />
                   <has-error :form="form" field="subCategory" />
                 </div>
-                <div v-if="brands" class="form-group col-md-6 col-xl-4">
+                <!-- <div v-if="brands" class="form-group col-md-6 col-xl-4">
                   <label for="brand">{{ $t('Brand') }}</label>
                   <v-select v-model="form.brand" :options="brands" label="name"
                     :class="{ 'is-invalid': form.errors.has('brand') }" name="brand"
                     :placeholder="$t('Select a brand')" />
                   <has-error :form="form" field="brand" />
-                </div>
+                </div> -->
                 <div v-if="units" class="form-group col-md-6 col-xl-4">
                   <label for="itemUnit">{{ $t('Unit') }}
                     <span class="required">*</span></label>
@@ -125,6 +131,14 @@
                     </option>
                   </select>
                   <has-error :form="form" field="taxType" />
+                </div>
+                <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
+                  <label for="purchasePrice">{{ $t('Purchase Price') }}
+                    <span class="required">*</span></label>
+                  <input id="purchasePrice" v-model="form.purchasePrice" type="number" step="any" min="0"
+                    class="form-control" :class="{ 'is-invalid': form.errors.has('purchasePrice') }" name="purchasePrice"
+                    :placeholder="$t('Enter purchase price')" />
+                  <has-error :form="form" field="purchasePrice" />
                 </div>
                 <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
                   <label for="regularPrice">{{ $t('Regular Price') }}
@@ -294,8 +308,10 @@ export default {
       subCategory: '',
       brand: '',
       itemUnit: '',
+      productType: 'tyre',
       productTax: '',
       taxType: 'Exclusive',
+      purchasePrice: '',
       regularPrice: '',
       servicePurchasePrice: '',
       discount: '',
@@ -367,11 +383,13 @@ export default {
       this.form.itemCode = data.data.code
       this.form.itemModel = data.data.itemModel
       this.form.barcodeSymbology = data.data.symbology
-      this.form.brand = data.data.itemBrand
+      // this.form.brand = data.data.itemBrand
+      this.form.productType = data.data.productType || 'tyre'
       this.form.productTax = data.data.itemTax
       this.form.taxType = data.data.taxType
       this.form.subCategory = data.data.subCategory
       this.form.itemUnit = data.data.itemUnit
+      this.form.purchasePrice = data.data.purchasePrice
       this.form.regularPrice = data.data.regularPrice
       this.form.servicePurchasePrice = data.data.servicePurchasePrice
       this.form.sellingPrice = data.data.sellingPrice

@@ -60,27 +60,34 @@ class ProductController extends Controller
     {
         // validate request
         $this->validate($request, [
-            'itemType' => 'required|string',
-            'itemName' => 'required|string|max:255',
-            'itemCode' => 'required|unique:products,code',
-            'itemModel' => 'nullable|string|min:2|max:255',
-            'barcodeSymbology' => 'required|string|max:20',
-            'subCategory' => 'required',
-            'brand' => 'nullable',
+    'itemType' => 'required|string',
+    'itemName' => 'required|string|max:255',
+    'itemCode' => 'required|unique:products,code',
+    'itemModel' => 'nullable|string|min:2|max:255',
+    'barcodeSymbology' => 'required|string|max:20',
+            'subCategory' => $request->itemType == 'service' ? 'nullable' : 'required',
             'itemUnit' => 'required',
-            'productTax' => 'required',
-            'taxType' => 'required',
-            'regularPrice' => 'required|numeric|min:0',
-            'servicePurchasePrice' => $request->itemType == 'service' ? 'required|numeric|min:0' : 'nullable',
-            'openingStockCount' => $request->isOpeningStock == true ? 'required|numeric|min:1' : 'nullable',
-            'openingStockUnitPrice' => $request->isOpeningStock == true ? 'required|numeric|min:1' : 'nullable',
-            'discount' => 'nullable|numeric|min:0|max:100',
-            'note' => 'nullable|string|max:255',
-            'alertQuantity' => 'nullable|numeric|min:1',
-        ]);
+    'productTax' => 'required',
+    'taxType' => 'required',
+    'regularPrice' => 'required|numeric|min:0',
+
+    // 🔋 battery fields
+    'productType' => 'nullable|string',
+    'batteryType' => 'nullable|string|max:255',
+    'voltage' => 'nullable|string|max:50',
+    'capacity' => 'nullable|string|max:50',
+    'warranty' => 'nullable|string|max:50',
+
+    'servicePurchasePrice' => $request->itemType == 'service' ? 'required|numeric|min:0' : 'nullable',
+    'openingStockCount' => $request->isOpeningStock == true ? 'required|numeric|min:1' : 'nullable',
+    'openingStockUnitPrice' => $request->isOpeningStock == true ? 'required|numeric|min:1' : 'nullable',
+    'discount' => 'nullable|numeric|min:0|max:100',
+    'note' => 'nullable|string|max:255',
+    'alertQuantity' => 'nullable|numeric|min:1',
+]);
         try {
             DB::beginTransaction();
-            
+
             // generate code
             $code = 1;
             if ($request->itemCode) {
@@ -128,7 +135,7 @@ class ProductController extends Controller
                 'code' => $code,
                 'model' => $request->itemModel,
                 'barcode_symbology' => $request->barcodeSymbology,
-                'sub_cat_id' => $request->subCategory['id'],
+                'sub_cat_id' => isset($request->subCategory['id']) ? $request->subCategory['id'] : null,
                 'brand_id' => $brand,
                 'unit_id' => $request->itemUnit['id'],
                 'tax_id' => $tax,
@@ -143,6 +150,12 @@ class ProductController extends Controller
                 'alert_qty' => $request->alertQuantity,
                 'status' => $request->status,
                 'image_path' => $imageName,
+                // 🔋 battery fields
+'product_type' => $request->productType,
+'battery_type' => $request->batteryType,
+'voltage' => $request->voltage,
+'capacity' => $request->capacity,
+'warranty' => $request->warranty,
             ]);
 
             // add activity log
@@ -202,8 +215,9 @@ class ProductController extends Controller
             'itemCode' => 'required|unique:products,code,' . $product->id,
             'itemModel' => 'nullable|string|min:2|max:255',
             'barcodeSymbology' => 'required|string|max:20',
-            'subCategory' => 'required',
+            'subCategory' => $request->itemType == 'service' ? 'nullable' : 'required',
             'brand' => 'nullable',
+
             'itemUnit' => 'required',
             'productTax' => 'required',
             'taxType' => 'required',
@@ -214,6 +228,11 @@ class ProductController extends Controller
             'discount' => 'nullable|numeric|min:0|max:100',
             'note' => 'nullable|string|max:255',
             'alertQuantity' => 'nullable|numeric|min:1|max:1000',
+            'productType' => 'nullable|string',
+'batteryType' => 'nullable|string|max:255',
+'voltage' => 'nullable|string|max:50',
+'capacity' => 'nullable|string|max:50',
+'warranty' => 'nullable|string|max:50',
         ]);
         try {
             DB::beginTransaction();
@@ -256,7 +275,7 @@ class ProductController extends Controller
                 $newOpeningStockUnitPrice = $request->openingStockUnitPrice;
 
                 $newInventoryCount = $product->inventory_count + ($request->openingStockCount - $product->opening_stock_count);
-               
+
                 $totalValueOldStock = $product->inventory_count * $product->purchase_price;
                 $totalValueNewStock = $newOpeningStockCount * $newOpeningStockUnitPrice;
 
@@ -273,7 +292,7 @@ class ProductController extends Controller
                 'code' => $request->itemCode,
                 'model' => $request->itemModel,
                 'barcode_symbology' => $request->barcodeSymbology,
-                'sub_cat_id' => $request->subCategory['id'],
+                'sub_cat_id' => isset($request->subCategory['id']) ? $request->subCategory['id'] : $product->sub_cat_id,
                 'brand_id' => $brand,
                 'unit_id' => $request->itemUnit['id'],
                 'tax_id' => $tax,
@@ -288,6 +307,11 @@ class ProductController extends Controller
                 'alert_qty' => $request->alertQuantity,
                 'status' => $request->status,
                 'image_path' => $imageName,
+                'product_type' => $request->productType ?? $product->product_type,
+'battery_type' => $request->batteryType,
+'voltage' => $request->voltage,
+'capacity' => $request->capacity,
+'warranty' => $request->warranty,
             ]);
 
             // add activity log

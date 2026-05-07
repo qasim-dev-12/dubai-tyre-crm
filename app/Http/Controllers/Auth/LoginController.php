@@ -159,6 +159,13 @@ class LoginController extends Controller
     $expiration = $this->guard()->getPayload()->get('exp');
 
     $user = $this->guard()->user()->load('roles', 'employee');
+    $userRoles = $user->roles()->with('permissions')->get();
+    $permissions = $userRoles
+        ->pluck('permissions')
+        ->flatten(1)
+        ->pluck('slug')
+        ->unique()
+        ->values();
 
     return response()->json([
         'token' => $token,
@@ -168,7 +175,9 @@ class LoginController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'account_role' => $user->account_role,
             'roles' => $user->roles->pluck('slug'),
+            'permissions' => $permissions,
             'employee' => $user->employee ? [
                 'id' => $user->employee->id,
                 'designation' => $user->employee->designation

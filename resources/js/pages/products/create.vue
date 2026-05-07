@@ -21,14 +21,14 @@
               <div class="row">
                 <div class="form-group col-md-12 col-xl-12">
                   <div class="btn-group btn-group-toggle w-25" data-toggle="buttons">
-                    <label 
+                    <label
                       class="btn btn-outline-custom"
                       :class="{ 'btn-custom-active': form.itemType === 'product' }">
                       <input type="radio" id="product" name="itemType" v-model="form.itemType" value="product" autocomplete="off">
                       {{ $t('Product') }}
                     </label>
 
-                    <label 
+                    <label
                       class="btn btn-outline-custom"
                       :class="{ 'btn-custom-active': form.itemType === 'service' }">
                       <input type="radio" id="service" name="itemType" v-model="form.itemType" value="service" autocomplete="off">
@@ -51,6 +51,100 @@
                     :placeholder="$t('Enter a model')" />
                   <has-error :form="form" field="itemModel" />
                 </div>
+                <!-- 🔋 PRODUCT TYPE -->
+<div class="form-group col-md-6 col-xl-3">
+  <label>Product Type</label>
+  <select v-model="form.productType" class="form-control">
+    <option value="tyre">Tyre</option>
+    <option value="battery">Battery</option>
+  </select>
+</div>
+
+<!-- 🔋 BATTERY FIELDS -->
+<div v-if="form.productType === 'battery'" class="row col-md-12">
+
+
+  <div class="form-group col-md-3">
+    <label>Product Code</label>
+    <input v-model="form.productCode" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Amp</label>
+    <input v-model="form.amp" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>CCA</label>
+    <input v-model="form.cca" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Dimension</label>
+    <input v-model="form.dimension" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-3">
+    <label>Unit Price</label>
+    <input v-model="form.unitPrice" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>VAT %</label>
+    <input v-model="form.vat" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>VAT Amount</label>
+    <input v-model="form.vatAmount" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Net Amount</label>
+    <input v-model="form.netAmount" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-3">
+    <label>Cost Price</label>
+    <input v-model="form.costPrice" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>10% Price</label>
+    <input v-model="form.price10" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>15% Price</label>
+    <input v-model="form.price15" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>5 AED</label>
+    <input v-model="form.price5AED" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>H.P</label>
+    <input v-model="form.hpPrice" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Salt</label>
+    <input v-model="form.salt" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>5 Salt</label>
+    <input v-model="form.fiveSalt" class="form-control" />
+  </div>
+
+  <div class="form-group col-md-3">
+    <label>Start Price</label>
+    <input v-model="form.startPrice" class="form-control" />
+  </div>
+
+</div>
                 <div class="form-group col-md-6 col-xl-3">
                   <div class="input-group">
                     <label for="itemCode" class="col-md-12">{{ $t('Item code') }}
@@ -79,21 +173,25 @@
                   </select>
                   <has-error :form="form" field="barcodeSymbology" />
                 </div>
-                <div v-if="items" class="form-group col-md-6 col-xl-4">
-                  <label for="subCategory">{{ $t('Sub Category') }}
-                    <span class="required">*</span></label>
-                  <v-select v-model="form.subCategory" :options="items" label="name"
-                    :class="{ 'is-invalid': form.errors.has('subCategory') }" name="subCategory"
-                    :placeholder="$t('Select a category')" />
+                <div class="form-group col-md-6 col-xl-4">
+                  <label>{{ $t('Sub Category') }}</label>
+                  <v-select
+                    v-model="form.subCategory"
+                    :options="items"
+                    label="name"
+                    :class="{ 'is-invalid': form.errors.has('subCategory') }"
+                    name="subCategory"
+                    :placeholder="$t('Select a sub category')"
+                  />
                   <has-error :form="form" field="subCategory" />
                 </div>
-                <div v-if="brands" class="form-group col-md-6 col-xl-4">
+                <!-- <div v-if="brands" class="form-group col-md-6 col-xl-4">
                   <label for="brand">{{ $t('Brand') }}</label>
                   <v-select v-model="form.brand" :options="brands" label="name"
                     :class="{ 'is-invalid': form.errors.has('brand') }" name="brand"
                     :placeholder="$t('Select a brand')" />
                   <has-error :form="form" field="brand" />
-                </div>
+                </div> -->
                 <div v-if="units" class="form-group col-md-6 col-xl-4">
                   <label for="itemUnit">{{ $t('Unit') }}
                     <span class="required">*</span></label>
@@ -123,6 +221,14 @@
                     </option>
                   </select>
                   <has-error :form="form" field="taxType" />
+                </div>
+                <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
+                  <label for="purchasePrice">{{ $t('Purchase Price') }}
+                    <span class="required">*</span></label>
+                  <input id="purchasePrice" v-model="form.purchasePrice" type="number" step="any" min="0"
+                    class="form-control" :class="{ 'is-invalid': form.errors.has('purchasePrice') }" name="purchasePrice"
+                    :placeholder="$t('Enter purchase price')" />
+                  <has-error :form="form" field="purchasePrice" />
                 </div>
                 <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
                   <label for="regularPrice">{{ $t('Regular Price') }}
@@ -265,6 +371,7 @@ export default {
     return { title: this.$t('Create Item') }
   },
   data: () => ({
+  brands: [],
     breadcrumbsCurrent: 'Create Item',
     breadcrumbs: [
       {
@@ -287,7 +394,7 @@ export default {
       itemModel: '',
       barcodeSymbology: 'CODE128',
       subCategory: '',
-      brand: '',
+      // brand: '',
       itemUnit: '',
       productTax: '',
       taxType: 'Exclusive',
@@ -302,10 +409,33 @@ export default {
       alertQuantity: 1,
       status: 1,
       image: '',
+      productType: 'tyre',
+      voltage: '',
+      capacity: '',
+      warranty: '',
+      batteryType: '',
+      purchasePrice: '',
+        brand: '',
+  productCode: '',
+  amp: '',
+  cca: '',
+  dimension: '',
+  unitPrice: '',
+  vat: '',
+  vatAmount: '',
+  netAmount: '',
+  costPrice: '',
+  price10: '',
+  price15: '',
+  price5AED: '',
+  hpPrice: '',
+  salt: '',
+  fiveSalt: '',
+  startPrice: '',
     }),
     options: [],
     units: [],
-    brands: [],
+    // brands: [],
     taxes: [],
     prefix: '',
     url: null,
@@ -316,9 +446,10 @@ export default {
   created() {
     this.getSubCategories()
     this.getUnits()
-    this.getBrands()
+    // this.getBrands()
     this.getTaxes()
     this.getItemCode()
+    this.getBrands()
   },
   methods: {
     // get all product categories
@@ -327,14 +458,19 @@ export default {
         path: '/api/all-product-sub-categories',
       })
     },
+    //get all brands
+    async getBrands() {
+  const { data } = await axios.get('/api/all-brands')
+  this.brands = data
+},
 
     // get all brands
-    async getBrands() {
-      const { data } = await axios.get(
-        window.location.origin + '/api/all-brands'
-      )
-      this.brands = data.data
-    },
+    // async getBrands() {
+    //   const { data } = await axios.get(
+    //     window.location.origin + '/api/all-brands'
+    //   )
+    //   this.brands = data.data
+    // },
 
     // get all units
     async getUnits() {

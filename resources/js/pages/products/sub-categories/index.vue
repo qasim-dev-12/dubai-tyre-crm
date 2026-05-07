@@ -9,7 +9,7 @@
           <div class="card-header setings-header">
             <div class="col-xl-4 col-4">
               <h3 class="card-title">
-                {{ $t("Item Sub Categories") }}
+                {{ $t("Brands") }}
               </h3>
             </div>
             <div class="col-xl-8 col-8 float-right text-right">
@@ -86,8 +86,8 @@
                   <tr>
                     <th>{{ $t("SL") }}</th>
                     <th>{{ $t("Category") }}</th>
-                    <th>{{ $t("Sub Category Code") }}</th>
-                    <th>{{ $t("Sub Category Name") }}</th>
+                    <th>{{ $t("Brand Code") }}</th>
+                    <th>{{ $t("Brand Name") }}</th>
                     <th>{{ $t("Status") }}</th>
                     <th
                       v-if="
@@ -114,7 +114,7 @@
                     <td>
                       <span v-if="data.category"
                         >{{ data.category.name }} [
-                        {{ data.category.code | withPrefix(catPrefix) }} ]
+                        {{ data.category.code }} ]
                       </span>
                     </td>
                     <td>{{ data.code | withPrefix(subCatPrefix) }}</td>
@@ -206,10 +206,10 @@ import { mapGetters } from "vuex";
 export default {
   middleware: ["auth", "check-permissions"],
   metaInfo() {
-    return { title: this.$t("Item Sub Categories") };
+    return { title: this.$t("Brands") };
   },
   data: () => ({
-    breadcrumbsCurrent: "Item Sub Categories",
+    breadcrumbsCurrent: "Brands",
     breadcrumbs: [
       {
         name: "Dashboard",
@@ -220,7 +220,7 @@ export default {
         url: "products.index",
       },
       {
-        name: "Sub Categories",
+        name: "Brands",
         url: "",
       },
     ],

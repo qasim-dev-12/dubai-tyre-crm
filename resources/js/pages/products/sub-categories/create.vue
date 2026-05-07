@@ -8,7 +8,7 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
-              {{ $t('Create Item Sub Category') }}
+              {{ $t('Create Brand') }}
             </h3>
             <router-link :to="{ name: 'productSubCats.index' }" class="btn btn-dark float-right">
               <i class="fas fa-long-arrow-alt-left" /> {{ $t('Back') }}
@@ -51,6 +51,24 @@
                   :class="{ 'is-invalid': form.errors.has('note') }" :placeholder="$t('Write your note here!')" />
                 <has-error :form="form" field="note" />
               </div>
+              <div class="form-group">
+  <label for="code">
+    {{ $t('Brand Code') }}
+    <span class="required">*</span>
+  </label>
+
+  <input
+    id="code"
+    v-model="form.code"
+    type="text"
+    class="form-control"
+    :class="{ 'is-invalid': form.errors.has('code') }"
+    name="code"
+    placeholder="Enter code (e.g. APS-10)"
+  />
+
+  <has-error :form="form" field="code" />
+</div>
             </div>
             <!-- /.card-body -->
             <div class="card-footer">
@@ -74,10 +92,10 @@ import Form from 'vform'
 export default {
   middleware: ['auth', 'check-permissions'],
   metaInfo() {
-    return { title: this.$t('Create Item Sub Category') }
+    return { title: this.$t('Create Brand') }
   },
   data: () => ({
-    breadcrumbsCurrent: 'Create Item Sub Category',
+    breadcrumbsCurrent: 'Create Brand',
     breadcrumbs: [
       {
         name: 'Dashboard',
@@ -88,7 +106,7 @@ export default {
         url: 'products.index',
       },
       {
-        name: 'Sub Categories',
+        name: 'Brands',
         url: 'productSubCats.index',
       },
       {
@@ -101,6 +119,7 @@ export default {
       note: '',
       status: 1,
       category: null,
+        code: '',   // 👈 ADD THIS
     }),
     options: [],
   }),
@@ -124,7 +143,7 @@ export default {
         .then(() => {
           toast.fire({
             type: 'success',
-            title: this.$t('Sub category added successfully'),
+            title: this.$t('Brand added successfully'),
           })
           this.$router.push({ name: 'productSubCats.index' })
         })

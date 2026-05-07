@@ -20,6 +20,8 @@ class UserResource extends JsonResource
         ->pluck('permissions')
         ->flatten(1)
         ->pluck('slug');
+    $userPermissions = $this->permissions()->pluck('slug');
+    $permissions = $rolesPermissions->merge($userPermissions)->unique()->values();
 
     return [
         'id' => $this->id, // ✅ VERY IMPORTANT
@@ -27,8 +29,9 @@ class UserResource extends JsonResource
         'email' => $this->email,
         'photo_url' => $this->photo_url,
         'created_at' => $this->created_at,
+        'account_role' => $this->account_role,
         'roles' => $roles,
-        'permissions' => $rolesPermissions,
+        'permissions' => $permissions,
 
         // ✅ THIS WAS MISSING
         'employee' => $this->employee ? [

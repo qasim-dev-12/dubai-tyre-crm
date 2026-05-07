@@ -8,7 +8,7 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">
-              {{ $t('Edit Item Sub Category') }}
+              {{ $t('Edit Brand') }}
             </h3>
             <router-link :to="{ name: 'productSubCats.index' }" class="btn btn-dark float-right">
               <i class="fas fa-long-arrow-alt-left" /> {{ $t('Back') }}
@@ -76,10 +76,10 @@ import axios from 'axios'
 export default {
   middleware: ['auth', 'check-permissions'],
   metaInfo() {
-    return { title: this.$t('Edit Item Sub Category') }
+    return { title: this.$t('Edit Brand') }
   },
   data: () => ({
-    breadcrumbsCurrent: 'Edit Item Sub Category',
+    breadcrumbsCurrent: 'Edit Brand',
     breadcrumbs: [
       {
         name: 'Dashboard',
@@ -90,7 +90,7 @@ export default {
         url: 'products.index',
       },
       {
-        name: 'Sub Categories',
+        name: 'Brands',
         url: 'productSubCats.index',
       },
       {
@@ -143,7 +143,7 @@ export default {
         .then((response) => {
           toast.fire({
             type: 'success',
-            title: this.$t('Sub category updated successfully'),
+            title: this.$t('Brand updated successfully'),
           })
           this.$router.push({ name: 'productSubCats.index' })
         })

@@ -80,4 +80,20 @@ class Employee extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get technician battery stocks.
+     */
+    public function technicianBatteryStocks()
+    {
+        return $this->hasMany(TechnicianBatteryStock::class, 'technician_id');
+    }
+
+    /**
+     * Get technician battery movements.
+     */
+    public function technicianBatteryMovements()
+    {
+        return $this->hasMany(TechnicianBatteryMovement::class, 'technician_id');
+    }
 }

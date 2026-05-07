@@ -1,0 +1,2 @@
+is_service,name,code,model,barcode_symbology,brand,category,unit,purchase_price,regular_price,discount,inventory_count,opening_stock_count,opening_stock_unit_price,alert_qty,note,status,image_path
+0,Battery Name,SKU123,ModelX,EAN-13,BrandName,Battery,Piece,100,120,0,50,50,100,5,Sample note,1,

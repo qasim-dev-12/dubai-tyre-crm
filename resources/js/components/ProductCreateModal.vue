@@ -11,14 +11,14 @@
                 {{ $t('Item Type') }} <span class="required">*</span>
               </label>
               <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
-                <label 
+                <label
                   class="btn btn-outline-custom"
                   :class="{ 'btn-custom-active': form.itemType === 'product' }">
                   <input type="radio" id="product" name="itemType" v-model="form.itemType" value="product" autocomplete="off">
                   {{ $t('Product') }}
                 </label>
 
-                <label 
+                <label
                   class="btn btn-outline-custom"
                   :class="{ 'btn-custom-active': form.itemType === 'service' }">
                   <input type="radio" id="service" name="itemType" v-model="form.itemType" value="service" autocomplete="off">
@@ -70,11 +70,11 @@
               <has-error :form="form" field="barcodeSymbology" />
             </div>
             <div v-if="categories" class="form-group col-6">
-              <label for="subCategory">{{ $t("Sub Category") }}
+              <label for="subCategory">{{ $t("Brand") }}
                 <span class="required">*</span></label>
               <v-select v-model="form.subCategory" :options="categories" label="name"
                 :class="{ 'is-invalid': form.errors.has('subCategory') }" name="subCategory"
-                :placeholder="$t('Select a category')" />
+                :placeholder="$t('Select a brand')" />
               <has-error :form="form" field="subCategory" />
             </div>
             <div v-if="brands" class="form-group col-6">

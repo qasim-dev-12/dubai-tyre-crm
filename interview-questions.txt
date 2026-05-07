@@ -1,0 +1,317 @@
+50 Beginner-Friendly Interview Questions
+
+Project / Domain
+1. What is the main business goal of this project?
+2. Which modules does the project include (inventory, sales, purchases, reports, etc.)?
+3. How do users manage products and categories in the app?
+4. What is the difference between a product, category, and subcategory here?
+5. Why does the app use brands inside the product workflow?
+6. How does the system handle battery products differently from other products?
+7. What are the main pages you built in the project?
+8. How does the inventory page work?
+9. What does the reports module show?
+10. What is the role of the product create/edit form?
+
+Laravel Backend
+11. What version of Laravel does the project use?
+12. What is a controller in Laravel, and which controllers are important here?
+13. How do you define routes for APIs in this app?
+14. What is a migration and why is it used?
+15. How do you validate incoming request data?
+16. What is an Eloquent model?
+17. How do you store images in this project?
+18. What is a Laravel resource (JsonResource)?
+19. How do you return paginated data from the API?
+20. How do you handle create and update operations for products?
+
+Vue Frontend
+21. What framework/library does the frontend use?
+22. How do you bind form fields in Vue?
+23. What is v-model used for?
+24. What is computed or watch in Vue?
+25. How do you show/hide fields conditionally?
+26. How do you call API endpoints from Vue?
+27. What is the purpose of v-select in the project?
+28. How does the product form show battery-specific fields?
+29. How do you display success/error notifications?
+30. What is the created() hook used for?
+
+Fullstack Concepts
+31. How does frontend communicate with backend?
+32. What data is sent when creating a product?
+33. How do you handle API errors on the frontend?
+34. What does npm run watch do?
+35. How do you manage translations in the UI?
+36. How do you ensure a product has category and subcategory?
+37. How do you handle dropdown options loaded from the API?
+38. What is the structure of the product list API response?
+39. How do you load product data into the edit page?
+40. Why is type-specific behavior important in the product form?
+
+Database / Data
+41. What tables are most important in this project?
+42. What is stored in the products table?
+43. What is the purpose of brand_id and sub_cat_id?
+44. Why might sub_cat_id be nullable?
+45. How do you use migrations to change the schema?
+46. What is a foreign key relationship?
+47. How do you import bulk product data?
+48. What fields are required for a battery product?
+49. How is inventory count tracked?
+50. What is the meaning of alert_qty?
+
+
+50 Intermediate Interview Questions
+
+Architecture / Design
+1. How is the overall app architecture organized?
+2. Why did you choose Vue + Laravel for this project?
+3. How do you separate concerns between frontend and backend?
+4. What is the data flow from database to UI?
+5. How do you handle product variants like batteries and tyres?
+6. How do you keep brands and subcategories consistent?
+7. How would you refactor this app for better scalability?
+8. How would you add a new module like purchase return?
+9. How do you design APIs for frontend consumption?
+10. How do you manage feature changes without breaking existing data?
+
+Laravel Advanced
+11. How do you work with Eloquent relationships in this project?
+12. Explain with('proSubCategory.category') and why it is used.
+13. How do you prevent N+1 query problems?
+14. How do you implement API resource classes effectively?
+15. How do you handle optional relationships safely?
+16. What is the purpose of DB::beginTransaction() in create/update?
+17. How do you catch and report exceptions in API controllers?
+18. How do you validate nested object inputs like subCategory.id?
+19. How would you secure the API endpoints?
+20. How do you use middleware for permission checks?
+
+Vue / Frontend Advanced
+21. How do you structure Vue components in this project?
+22. How do you manage reusable form fields?
+23. How would you implement a product search/filter feature?
+24. How do you avoid duplicate logic between create/edit pages?
+25. How do you handle dependent dropdowns in Vue?
+26. How would you optimize API calls for dropdown data?
+27. How do you handle form resetting and initial default values?
+28. How do you integrate third-party components like v-select?
+29. How do you manage state for loaded dropdown options?
+30. How would you make the product form more modular?
+
+API / Data Handling
+31. Explain how the product detail API response is built.
+32. How do you map frontend fields to backend database fields?
+33. How do you design the payload for product creation?
+34. What is the impact of sending full objects vs IDs to the API?
+35. How would you add support for bulk upload of batteries?
+36. How do you prevent invalid brand or category IDs?
+37. How do you handle legacy data in your API?
+38. How do you ensure API responses are format-stable?
+39. How do you design the show/edit API for a product?
+40. How do you handle missing related resources in API output?
+
+Performance / Reliability
+41. How do you reduce page load time in the frontend?
+42. How would you optimize database queries for product listing?
+43. How do you ensure frontend assets build reliably?
+44. How do you debug production errors in Vue or Laravel?
+45. How do you handle offline or slow network conditions?
+46. What caching techniques could improve this app?
+47. How do you monitor API performance?
+48. How do you test that null relationships do not crash the UI?
+49. How do you ensure form validation is consistent frontend/backend?
+50. How would you plan a deployment for this app?
+
+Top Fullstack Interview Questions (Most Asked)
+1. Describe your exact role in this project and which parts you built end-to-end.
+2. How do you choose between frontend validation and backend validation?
+3. What is your approach for designing REST APIs that are easy for Vue to consume?
+4. How do you manage authentication and user permissions in Laravel?
+5. How do you load and manage dropdown data from the server in Vue?
+6. How do you keep the frontend and backend code in sync when field names change?
+7. How do you debug a bug that happens only after deployment?
+8. What steps do you take to optimize product listing performance?
+9. How do you handle file uploads and image storage in Laravel?
+10. How do you handle dependent dropdowns like category, subcategory, brand in the UI?
+11. What is CORS and how do you solve it when the frontend calls the backend?
+12. How do you secure the app against SQL injection, XSS, and invalid input?
+13. How do you design a database schema for products, categories, brands, and inventory?
+14. How do you implement transactions and rollback when creating or updating a product?
+15. How do you make sure the UI stays responsive while waiting for API calls?
+16. How do you handle API responses that return optional or missing related data?
+17. How do you test changes to both frontend and backend before releasing?
+18. How do you use version control and branch strategy when working on this project alone?
+19. How would you deploy this Laravel + Vue app to production?
+20. How do you plan to maintain this project and add new modules in the future?
+
+Teamwork-Focused Interview Questions
+1. How did your team decide which features to build first for this project?
+2. How did you communicate product requirements with designers, backend, and frontend developers?
+3. What tools did your team use for project collaboration and tracking?
+4. How did you prioritize bugs versus new features in your team?
+5. How did you coordinate API changes with the frontend team?
+6. What was your role in code reviews and team feedback?
+7. How did you handle merge conflicts with other developers?
+8. How did your team share knowledge about the project architecture?
+9. How did you contribute to planning sprint goals or milestones?
+10. How did you ensure the product met both business and technical expectations?
+11. How did you help teammates understand the battery and tyre product logic?
+12. How did you work with QA or testers to verify fixes?
+13. How did you balance team input with your own implementation decisions?
+14. How did you document changes for other team members?
+15. How did you help onboard a new developer onto this project?
+16. How did your team handle changing requirements during development?
+17. What was your process for sharing deployment or release notes?
+18. How did you ensure consistency across different team members’ code?
+19. How did you support teammates when they had questions about Laravel or Vue?
+20. How did you collaborate on the data model for products, categories, and brands?
+21. How did you keep frontend and backend teams in sync on validation rules?
+22. How did you work with designers to make the UI intuitive?
+23. How did you communicate the impact of a backend change to the frontend?
+24. How did you handle feedback from stakeholders or product owners?
+25. How did you contribute to defining the project’s coding standards?
+26. How did you share responsibility for testing and bug fixing?
+27. How did you handle a situation where team members disagreed about an approach?
+28. How did you keep the team informed when a critical bug was discovered?
+29. How did you ensure the team understood the project’s release schedule?
+30. How did you support cross-functional collaboration with support or operations?
+31. How did you record decisions so the team could revisit them later?
+32. How did you communicate progress on large features like product import?
+33. How did you help the team understand technical debt and its tradeoffs?
+34. How did you collaborate on improving app performance?
+35. How did you share the workload for frontend and backend deployment tasks?
+36. How did you keep your team aligned when adding a new product type?
+37. How did you use team meetings to resolve technical questions?
+38. How did you help the team follow best practices for security?
+39. How did you coordinate with team members when fixing production issues?
+40. How did you contribute to improving team efficiency or processes?
+41. How did you work with others to define API response formats?
+42. How did you help resolve ambiguity in feature requirements?
+43. How did you ensure your team delivered a stable product increment?
+44. How did you share responsibility for codebase cleanup or refactoring?
+45. How did you collaborate on creating a maintainable folder structure?
+46. How did you involve teammates when choosing libraries or plugins?
+47. How did you gather input from the team before implementing a change?
+48. How did you demonstrate leadership while still being a team player?
+49. How did you make sure team members understood the product’s business value?
+50. How did your teamwork contribute to shipping the project successfully?
+
+Senior Fullstack Interview Questions
+1. How do you design an architecture that can scale from a small product to a large enterprise app?
+2. How do you evaluate whether a new feature should be built in the existing app or as a separate microservice?
+3. How do you choose between monolith and microservices for a Laravel/Vue project?
+4. How do you establish coding standards and enforce them across a team?
+5. How do you mentor junior developers and review their code effectively?
+6. How do you design and document APIs so other teams can consume them safely?
+7. How do you ensure high availability and fault tolerance in your app?
+8. How do you design database schemas for future-proofing and backward compatibility?
+9. How do you improve app security beyond basic validation?
+10. How do you define an effective testing strategy for frontend and backend?
+11. How do you use automation in CI/CD to deploy Laravel and Vue applications?
+12. How do you identify and reduce technical debt in an existing codebase?
+13. How do you design fallback behavior for failed API calls in the frontend?
+14. How do you measure the performance impact of frontend and backend changes?
+15. How do you make the product form and data flow resilient to schema changes?
+16. How do you architect reusable components and shared services in Vue?
+17. How do you select and integrate third-party tools or libraries responsibly?
+18. How do you use observability tools to monitor application health?
+19. How do you handle complex migrations and data migrations safely?
+20. How do you lead discussions about tradeoffs between speed, quality, and cost?
+21. How do you design a global error handling strategy for Laravel APIs?
+22. How do you implement role-based access control for application features?
+23. How do you plan releases to minimize risk for production users?
+24. How do you ensure data integrity during bulk imports or updates?
+25. How do you build a roadmap for evolving this product over the next year?
+26. How do you drive architectural improvements without blocking current delivery?
+27. How do you evaluate whether a new frontend framework or architecture is needed?
+28. How do you make the codebase easier to maintain by other developers?
+29. How do you handle deployment rollbacks and hotfix processes?
+30. How do you document design decisions so the team can follow them later?
+31. How do you ensure the product is accessible and usable for real users?
+32. How do you structure feature branches and release branches in git?
+33. How do you manage performance budgets in the frontend?
+34. How do you ensure API contracts remain stable across versions?
+35. How do you improve the development workflow with automated linting and formatting?
+36. How do you define the boundary between frontend and backend responsibilities?
+37. How would you migrate this app to support multiple vendors or franchises?
+38. How do you design the app to support multiple languages and locales?
+39. How do you integrate analytics and usage tracking into the product?
+40. How do you make the product easier to operate and support after deployment?
+41. How do you assess and improve the security of file uploads and user data?
+42. How do you use caching layers to improve response times safely?
+43. How do you design a consistent error and success response format for APIs?
+44. How do you measure and improve the quality of customer-facing workflows?
+45. How do you align technical work with business KPIs and ROI?
+46. How do you drive cross-team collaboration with product, QA, and operations?
+47. How do you decide when to refactor code versus adding a new feature?
+48. How do you lead post-mortems after production incidents?
+49. How do you mentor the team in adopting good testing habits?
+50. How do you ensure the whole application can evolve without major rewrites?
+
+
+what i should add to becom senior level developer ?
+Add automated tests
+Laravel feature/unit tests for product APIs
+Vue component/form tests for product form behavior
+
+Add CI/CD config
+GitHub Actions / GitLab CI for lint, test, build, deploy
+
+Improve architecture
+separate reusable frontend components
+central API service layer in Vue
+reusable Laravel request validation classes
+
+
+Add observability
+structured logs
+error reporting for API failures
+basic performance monitoring
+
+Add documentation
+architecture overview
+API contract list
+onboarding notes for new developers
+
+
+Add senior-grade features
+role-based access control
+versioned APIs
+bulk import with validation and rollback
+deployment-ready build scripts
+
+
+
+
+More Concepts to know
+Architecture decisions
+monolith vs microservices
+API contract design
+database schema evolution and migrations
+
+
+
+Reliability and operations
+CI/CD pipeline for Laravel + Vue
+rollback, hotfix, release planning
+monitoring, logging, error handling
+
+
+Performance and scalability
+query optimization and eager loading
+frontend bundle optimization
+caching and rate limiting
+
+
+Security and quality
+RBAC / permissions
+secure uploads and sanitization
+automated testing and code reviews
+
+
+Team leadership
+mentoring, standards, documentation
+tradeoff decisions
+cross-team collaboration
+

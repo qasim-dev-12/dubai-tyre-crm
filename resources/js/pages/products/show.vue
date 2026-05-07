@@ -119,7 +119,7 @@
                       </td>
                     </tr>
                     <tr v-if="allData.subCategory">
-                      <th>{{ $t("Sub Category") }}</th>
+                      <th>{{ $t("Brand") }}</th>
                       <td>
                         {{ allData.subCategory.name }} [{{
                           allData.subCategory.code | withPrefix(subCatPrefix)

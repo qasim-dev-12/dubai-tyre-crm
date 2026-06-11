@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Laravel Serve with Browser",
+			"type": "shell",
+			"command": "php",
+			"args": [
+				"artisan",
+				"serve",
+				"--open"
+			],
+			"isBackground": true
+		}
+	]
+}

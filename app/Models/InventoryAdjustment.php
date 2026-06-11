@@ -16,7 +16,7 @@ class InventoryAdjustment extends Model
      * @var array
      */
     protected $fillable = [
-        'reason', 'slug', 'code',  'date', 'created_by', 'note', 'status', 'is_paid',
+        'reason', 'slug', 'code',  'date', 'created_by', 'technician_id', 'note', 'status', 'is_paid',
     ];
 
     /**
@@ -47,5 +47,13 @@ class InventoryAdjustment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the technician assigned to this adjustment.
+     */
+    public function technician()
+    {
+        return $this->belongsTo(Employee::class, 'technician_id');
     }
 }

@@ -28,9 +28,20 @@
                   <has-error :form="form" field="adjustmentReason" />
                 </div>
                 <div class="form-group col-md-6">
+                  <label for="technician">{{ $t("Technician") }}
+                    <span class="required">*</span></label>
+                  <v-select v-model="form.technician" :options="technicians" label="name" :class="{
+                    'is-invalid': form.errors.has('technician'),
+                  }" name="technician" :placeholder="$t('Select technician')"
+                    @input="onTechnicianChange" />
+                  <has-error :form="form" field="technician" />
+                </div>
+              </div>
+              <div v-if="products && form.technician" class="row">
+                <div class="form-group col-md-12">
                   <label for="product">{{ $t("Select Products") }}
                     <span class="required">*</span></label>
-                  <v-select v-model="form.product" :options="products" label="label" :class="{
+                  <v-select v-model="form.product" :options="adjustmentProducts" label="label" :class="{
                     'is-invalid': form.errors.has('selectedProducts'),
                   }" name="product" :placeholder="$t('Search products')"
                     @input="storeProduct(form.product)" />
@@ -38,6 +49,11 @@
                 </div>
               </div>
               <div v-if="form.selectedProducts && form.selectedProducts.length > 0" class="row mt-3 mb-2">
+                <div class="col-md-12 mb-3">
+                  <div class="alert alert-info">
+                    <strong>{{ $t("Assigned Technician") }}:</strong> {{ form.technician.name }}
+                  </div>
+                </div>
                 <div class="table-responsive table-custom w-95 m-auto table-sm">
                   <table class="table table-hover">
                     <thead>
@@ -196,18 +212,24 @@ export default {
     form: new Form({
       selectedProducts: [],
       adjustmentReason: "",
+      technician: null,
       adjustmentDate: new Date().toISOString().slice(0, 10),
       note: "",
       status: 1,
     }),
-    products: "",
+    products: null,
+    technicians: [],
     prefix: "",
   }),
   computed: {
     ...mapGetters("operations", ["items", "appInfo"]),
+    adjustmentProducts() {
+      return Array.isArray(this.products) ? this.products : [];
+    },
   },
   created() {
     this.getProducts();
+    this.getTechnicians();
     this.prefix = this.appInfo.productPrefix;
   },
   methods: {
@@ -216,7 +238,27 @@ export default {
       const { data } = await axios.get(
         window.location.origin + "/api/all-products-not-service"
       );
-      this.products = data.data;
+      this.products = data.data || data || [];
+    },
+
+    // get technicians
+    async getTechnicians() {
+      try {
+        const { data } = await axios.get(
+          window.location.origin + "/api/technicians"
+        );
+        this.technicians = data.data || data;
+      } catch (error) {
+        console.error("Error fetching technicians:", error);
+        this.technicians = [];
+      }
+    },
+
+    // handle technician change
+    onTechnicianChange(technician) {
+      this.form.technician = technician;
+      // Clear selected products when technician changes
+      this.form.selectedProducts = [];
     },
 
     // store item in array
@@ -283,6 +325,27 @@ export default {
 
     // save adjustment
     async saveAdjustment() {
+      // Validate technician is selected
+      if (!this.form.technician) {
+        toast.fire({
+          type: "error",
+          title: this.$t("Please select a technician"),
+        });
+        return;
+      }
+
+      // Validate products are selected
+      if (!this.form.selectedProducts || this.form.selectedProducts.length === 0) {
+        toast.fire({
+          type: "error",
+          title: this.$t("Please select at least one product"),
+        });
+        return;
+      }
+
+      // Add technician_id to form data
+      this.form.technician_id = this.form.technician.id;
+
       await this.form
         .post(window.location.origin + "/api/inventory-adjustments")
         .then(() => {

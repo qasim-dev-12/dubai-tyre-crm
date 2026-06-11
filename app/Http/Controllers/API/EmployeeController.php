@@ -411,7 +411,10 @@ class EmployeeController extends Controller
      */
     public function allEmployees()
     {
-        $allEmployees = Employee::with('department')->where('status', 1)->latest()->get();
+        $allEmployees = Employee::with(['department', 'user.roles'])
+            ->where('status', 1)
+            ->latest()
+            ->get();
 
         return EmployeeResource::collection($allEmployees);
     }
@@ -475,10 +478,11 @@ class EmployeeController extends Controller
     }
 
     public function technicians()
-{
-    return Employee::where('designation', 'Technician')
-        ->where('status', 1)
-        ->select('id', 'name')
-        ->get();
-}
+    {
+        return Employee::whereRaw('LOWER(TRIM(designation)) = ?', ['technician'])
+            ->where('status', 1)
+            ->orderBy('name')
+            ->select('id', 'name')
+            ->get();
+    }
 }

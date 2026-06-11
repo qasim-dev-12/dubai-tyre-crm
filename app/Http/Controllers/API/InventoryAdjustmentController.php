@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\AdjustmentProduct;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryAdjustment;
+use App\Models\TechnicianBatteryStock;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\AdjustmentResource;
@@ -32,7 +33,18 @@ class InventoryAdjustmentController extends Controller
      */
     public function index(Request $request)
     {
-        return AdjustmentListResource::collection(InventoryAdjustment::latest()->paginate($request->perPage));
+        $query = InventoryAdjustment::with('technician', 'user')->latest();
+        $user = $request->user();
+
+        if ($this->isTechnicianUser($user)) {
+            if ($user->employee) {
+                $query->where('technician_id', $user->employee->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        return AdjustmentListResource::collection($query->paginate($request->perPage));
     }
 
     /**
@@ -46,6 +58,7 @@ class InventoryAdjustmentController extends Controller
         // validate request
         $this->validate($request, [
             'adjustmentReason' => 'required|string|max:255',
+            'technician_id' => 'required|exists:employees,id',
             'selectedProducts' => 'required|array|min:1',
             'selectedProducts.*' => 'required|distinct',
             'adjustmentDate' => 'nullable|date_format:Y-m-d',
@@ -54,7 +67,7 @@ class InventoryAdjustmentController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // generate code
             $code = 1;
             $prevCode = InventoryAdjustment::latest()->first();
@@ -73,6 +86,7 @@ class InventoryAdjustmentController extends Controller
                 'note' => clean($request->note),
                 'status' => $request->status,
                 'created_by' => $userId,
+                'technician_id' => $request->technician_id,
             ]);
 
             // store adjustment products
@@ -102,6 +116,23 @@ class InventoryAdjustmentController extends Controller
                     'purchase_price' => $selectedProduct['purchasePrice'],
                     'quantity' => $selectedProduct['adjustQty'],
                 ]);
+
+                // sync technician battery stock
+                $batteryStock = TechnicianBatteryStock::firstOrNew([
+                    'technician_id' => $request->technician_id,
+                    'product_id' => $product->id,
+                ]);
+
+                // Decrement adjustment means product is taken from inventory and assigned to the technician.
+                // Increment adjustment means product is returned from technician back to inventory.
+                $delta = $selectedProduct['adjustType'] == 'Increment'
+                    ? -$selectedProduct['adjustQty']
+                    : $selectedProduct['adjustQty'];
+
+                $batteryStock->quantity = max(0, ($batteryStock->quantity ?? 0) + $delta);
+                $batteryStock->available_quantity = max(0, ($batteryStock->available_quantity ?? 0) + $delta);
+                $batteryStock->reserved_quantity = $batteryStock->reserved_quantity ?? 0;
+                $batteryStock->save();
             }
 
             // add activity log
@@ -133,10 +164,21 @@ class InventoryAdjustmentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($slug)
+    public function show(Request $request, $slug)
     {
         try {
-            $adjustment = InventoryAdjustment::with('adjustmentProducts.product.productUnit', 'user')->where('slug', $slug)->first();
+            $adjustment = InventoryAdjustment::with(
+                'adjustmentProducts.product.productUnit',
+                'user',
+                'technician'
+            )->where('slug', $slug)->firstOrFail();
+
+            $user = $request->user();
+            if ($this->isTechnicianUser($user)) {
+                if (!$user->employee || $adjustment->technician_id !== $user->employee->id) {
+                    return $this->responseWithError('You are not authorized to view this adjustment', [], 403);
+                }
+            }
 
             return new AdjustmentResource($adjustment);
         } catch (Exception $e) {
@@ -309,7 +351,16 @@ class InventoryAdjustmentController extends Controller
     {
         $term = $request->term;
         $filterType = $request->filterType;
-        $query = InventoryAdjustment::with('user');
+        $query = InventoryAdjustment::with('technician', 'user');
+        $user = $request->user();
+
+        if ($this->isTechnicianUser($user)) {
+            if ($user->employee) {
+                $query->where('technician_id', $user->employee->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
 
         // Apply status filter first
         if ($filterType === 'active') {
@@ -327,5 +378,13 @@ class InventoryAdjustmentController extends Controller
         });
 
         return AdjustmentListResource::collection($query->latest()->paginate($request->perPage));
+    }
+
+    protected function isTechnicianUser($user)
+    {
+        return $user && (
+            $user->account_role == 0 ||
+            $user->roles()->where('slug', 'technician')->exists()
+        );
     }
 }

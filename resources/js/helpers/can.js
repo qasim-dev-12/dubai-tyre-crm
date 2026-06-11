@@ -8,8 +8,8 @@ export default (permissions) => {
   const userEmail = user ? user.email : null
   let canEnter = false
 
-  // If user account_role is 0 (super admin) or user has super-admin role or email fallback
-  if (superAdmin === 0 || userRoles.includes('super-admin') || userEmail === 'superadmin@acculance.com') {
+  // If user account_role is 1 (admin) or user has super-admin role or email fallback
+  if (superAdmin == 1 || userRoles.includes('super-admin') || userEmail === 'superadmin@acculance.com') {
     return true
   }
 

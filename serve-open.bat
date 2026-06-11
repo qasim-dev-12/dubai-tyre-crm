@@ -1,0 +1,6 @@
+@echo off
+echo Starting Laravel development server...
+echo Opening browser in 2 seconds...
+timeout /t 2 /nobreak
+start http://localhost:8000
+php artisan serve

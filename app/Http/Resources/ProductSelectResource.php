@@ -17,6 +17,7 @@ class ProductSelectResource extends JsonResource
         return [
             'id' => $this->id,
             'itemType' => $this->is_service == true ? 'service' : 'product',
+            'productType' => $this->product_type,
             'name' => $this->name,
             'label' => $this->name.' ['.$this->code.']',
             'slug' => $this->slug,

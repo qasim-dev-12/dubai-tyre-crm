@@ -45,16 +45,28 @@
                   <has-error :form="form" field="itemName" />
                 </div>
                 <div class="form-group col-md-6 col-xl-3">
-                  <label for="itemModel">{{ $t('Item Model') }}</label>
+                  <label for="itemModel">{{ $t('Dimensions') }}</label>
                   <input id="itemModel" v-model="form.itemModel" type="text" class="form-control"
                     :class="{ 'is-invalid': form.errors.has('itemModel') }" name="itemModel"
-                    :placeholder="$t('Enter a model')" />
+                    :placeholder="$t('Enter dimensions')" />
                   <has-error :form="form" field="itemModel" />
+                </div>
+                <div class="form-group col-md-6 col-xl-4">
+                  <label>{{ $t('Sub Category') }}</label>
+                  <v-select
+                    v-model="form.subCategory"
+                    :options="items"
+                    label="name"
+                    :class="{ 'is-invalid': form.errors.has('subCategory') }"
+                    name="subCategory"
+                    :placeholder="$t('Select a sub category')"
+                  />
+                  <has-error :form="form" field="subCategory" />
                 </div>
                 <!-- 🔋 PRODUCT TYPE -->
 <div class="form-group col-md-6 col-xl-3">
   <label>Product Type</label>
-  <select v-model="form.productType" class="form-control">
+  <select v-model="form.productType" class="form-control" @change="calculatePrice">
     <option value="tyre">Tyre</option>
     <option value="battery">Battery</option>
   </select>
@@ -84,64 +96,53 @@
     <input v-model="form.dimension" class="form-control" />
   </div>
 
-  <div class="form-group col-md-3">
-    <label>Unit Price</label>
-    <input v-model="form.unitPrice" class="form-control" />
-  </div>
-
-  <div class="form-group col-md-2">
-    <label>VAT %</label>
-    <input v-model="form.vat" class="form-control" />
+<div class="form-group col-md-2">
+    <label>Net Amount</label>
+    <input v-model="form.netAmount" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-2">
     <label>VAT Amount</label>
-    <input v-model="form.vatAmount" class="form-control" />
-  </div>
-
-  <div class="form-group col-md-2">
-    <label>Net Amount</label>
-    <input v-model="form.netAmount" class="form-control" />
+    <input v-model="form.vatAmount" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-3">
-    <label>Cost Price</label>
-    <input v-model="form.costPrice" class="form-control" />
+    <label>{{ $t('Call Center Amount') }}</label>
+    <input v-model="form.costPrice" class="form-control" :readonly="form.productType === 'battery'" />
   </div>
-
   <div class="form-group col-md-2">
     <label>10% Price</label>
-    <input v-model="form.price10" class="form-control" />
+    <input v-model="form.price10" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-2">
     <label>15% Price</label>
-    <input v-model="form.price15" class="form-control" />
+    <input v-model="form.price15" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-2">
     <label>5 AED</label>
-    <input v-model="form.price5AED" class="form-control" />
+    <input v-model="form.price5AED" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-2">
     <label>H.P</label>
-    <input v-model="form.hpPrice" class="form-control" />
+    <input v-model="form.hpPrice" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-2">
     <label>Salt</label>
-    <input v-model="form.salt" class="form-control" />
+    <input v-model="form.salt" class="form-control" @change="calculatePrice" @keyup="calculatePrice" />
   </div>
 
   <div class="form-group col-md-2">
     <label>5 Salt</label>
-    <input v-model="form.fiveSalt" class="form-control" />
+    <input v-model="form.fiveSalt" readonly class="form-control" />
   </div>
 
   <div class="form-group col-md-3">
     <label>Start Price</label>
-    <input v-model="form.startPrice" class="form-control" />
+    <input v-model="form.startPrice" readonly class="form-control" />
   </div>
 
 </div>
@@ -172,18 +173,6 @@
                     <option value="UPC">UPC</option>
                   </select>
                   <has-error :form="form" field="barcodeSymbology" />
-                </div>
-                <div class="form-group col-md-6 col-xl-4">
-                  <label>{{ $t('Sub Category') }}</label>
-                  <v-select
-                    v-model="form.subCategory"
-                    :options="items"
-                    label="name"
-                    :class="{ 'is-invalid': form.errors.has('subCategory') }"
-                    name="subCategory"
-                    :placeholder="$t('Select a sub category')"
-                  />
-                  <has-error :form="form" field="subCategory" />
                 </div>
                 <!-- <div v-if="brands" class="form-group col-md-6 col-xl-4">
                   <label for="brand">{{ $t('Brand') }}</label>
@@ -227,16 +216,16 @@
                     <span class="required">*</span></label>
                   <input id="purchasePrice" v-model="form.purchasePrice" type="number" step="any" min="0"
                     class="form-control" :class="{ 'is-invalid': form.errors.has('purchasePrice') }" name="purchasePrice"
-                    :placeholder="$t('Enter purchase price')" />
+                    :placeholder="$t('Enter purchase price')" @change="calculatePrice" @keyup="calculatePrice" />
                   <has-error :form="form" field="purchasePrice" />
                 </div>
                 <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
-                  <label for="regularPrice">{{ $t('Regular Price') }}
+                  <label for="regularPrice">{{ $t('Call Center Price') }}
                     <span class="required">*</span></label>
                   <input id="regularPrice" v-model="form.regularPrice" type="number" step="any" min="0"
                     class="form-control" :class="{ 'is-invalid': form.errors.has('regularPrice') }" name="regularPrice"
-                    :placeholder="$t('Enter regular price')
-                      " @change="calculatePrice" @keyup="calculatePrice" />
+                    :placeholder="$t('Enter call center price')
+                      " @change="calculatePrice" @keyup="calculatePrice" :readonly="form.productType === 'battery'" />
                   <has-error :form="form" field="regularPrice" />
                 </div>
                 <div class="form-group col-md-6" :class="form.itemType === 'service' ? 'col-xl-3' : 'col-xl-4'">
@@ -409,7 +398,7 @@ export default {
       alertQuantity: 1,
       status: 1,
       image: '',
-      productType: 'tyre',
+      productType: 'battery',
       voltage: '',
       capacity: '',
       warranty: '',
@@ -507,6 +496,49 @@ export default {
 
     // calculate selling price
     calculatePrice() {
+      if (this.form.productType === 'battery') {
+        const purchasePrice = Number(this.form.purchasePrice) || 0
+        const salt = Number(this.form.salt) || 0
+        const taxRate = Number(this.form.productTax?.rate || 0)
+        const taxFactor = taxRate / 100
+
+        // Step 1: Purchase Price + VAT = Unit/Net Price
+        const vatAmount = purchasePrice * taxFactor
+        const netAmount = purchasePrice + vatAmount
+
+        // Step 2: Unit Price + Salt = Cost Price
+        const costPrice = netAmount + salt
+
+        // Step 3: Cost Price + VAT on Cost = Call Center Price
+        const costVat = costPrice * taxFactor
+        const callCenterPrice = costPrice + costVat
+
+        // Discount applied on Call Center Price
+        const discount = Number(this.form.discount) || 0
+        const discountAmount = (callCenterPrice * discount) / 100
+        const sellingPrice = callCenterPrice - discountAmount
+
+        // All output fields
+        this.form.vat = taxRate
+        this.form.vatAmount = Number(vatAmount.toFixed(2))
+        this.form.unitPrice = Number(netAmount.toFixed(2))
+        this.form.costPrice = Number(costPrice.toFixed(2))
+        this.form.netAmount = Number(netAmount.toFixed(2))
+        this.form.regularPrice = Number(callCenterPrice.toFixed(2))
+        this.form.sellingPrice = Number(sellingPrice.toFixed(2))
+
+        // Derived prices based on Call Center Price
+        this.form.price10 = Number((callCenterPrice * 0.9).toFixed(2))
+        this.form.price15 = Number((callCenterPrice * 0.85).toFixed(2))
+        this.form.price5AED = Number((callCenterPrice + (salt / 7)).toFixed(2))
+        this.form.hpPrice = Number(((callCenterPrice + (salt / 7)) * 1.3).toFixed(2))
+
+        // Salt-based pricing
+        this.form.fiveSalt = Number((salt / 7).toFixed(2))
+        this.form.startPrice = Number((netAmount + 100).toFixed(2))
+        return
+      }
+
       if (this.form.sellingPrice && this.form.productTax && this.form.taxType) {
         let discount = 0
         if (this.form.discount && this.form.discount > 0) {

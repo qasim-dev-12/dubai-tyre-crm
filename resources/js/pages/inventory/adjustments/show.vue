@@ -81,6 +81,8 @@
                 }}<br />
                 <strong>{{ $t("Created By") }}:</strong>
                 {{ allData.createdBy }}<br />
+                <strong v-if="allData.technician">{{ $t("Technician") }}:</strong>
+                <span v-if="allData.technician">{{ allData.technician }}</span>
               </div>
               <!-- /.col -->
             </div>
@@ -98,6 +100,7 @@
                         <th v-if="allData.reason">{{ $t("Reason") }}</th>
                         <th v-if="allData.date">{{ $t("Date") }}</th>
                         <th v-if="allData.note">{{ $t("Note") }}</th>
+                        <th v-if="allData.technician">{{ $t("Technician") }}</th>
                         <th>{{ $t("Status") }}</th>
                         <th class="text-right">
                           {{ $t("Created By") }}
@@ -114,6 +117,7 @@
                           {{ allData.date | moment("Do MMM, YYYY") }}
                         </td>
                         <td v-if="allData.note">{{ allData.note }}</td>
+                        <td v-if="allData.technician">{{ allData.technician }}</td>
                         <td>
                           <span
                             v-if="allData.status === 1"

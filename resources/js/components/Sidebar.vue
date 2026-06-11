@@ -187,7 +187,8 @@
             $can('invoice-return-view') ||
             $can('invoice-return-edit') ||
             $can('invoice-return-delete') ||
-            $can('job-list')
+            $can('job-list') ||
+            isTechnicianUser
           " class="nav-item has-treeview" :class="menuOpen('quotations') ||
             menuOpen('invoices') ||
             menuOpen('invoiceReturns')
@@ -207,54 +208,58 @@
               ? 'display: block'
               : 'display: none'
               ">
-              <li v-if="$can('quotation-list') ||
+              <li v-if="!isTechnicianUser && ($can('quotation-list') ||
                 $can('quotation-create') ||
                 $can('quotation-view') ||
                 $can('quotation-edit') ||
                 $can('quotation-delete') ||
-                $can('quotation-to-invoice')
+                $can('quotation-to-invoice'))
               " class="nav-item">
                 <router-link :to="{ name: 'quotations.index' }" class="nav-link">
                   <i class="fas fa-th-list nav-icon" />
                   <p>{{ $t("Quotations List") }}</p>
                 </router-link>
               </li>
-              <li v-if="$can('invoice-list') ||
+              <li v-if="!isTechnicianUser && ($can('invoice-list') ||
                 $can('invoice-create') ||
                 $can('invoice-view') ||
                 $can('invoice-edit') ||
-                $can('invoice-delete')
+                $can('invoice-delete'))
               " class="nav-item">
                 <router-link :to="{ name: 'invoices.index' }" class="nav-link">
                   <i class="fas fa-file-invoice nav-icon" />
                   <p>{{ $t("Invoices List") }}</p>
                 </router-link>
               </li>
-              <li v-if="$can('job-list')" class="nav-item">
+              <li v-if="$can('job-list') || isTechnicianUser" class="nav-item">
                   <router-link :to="{ name: 'jobs.index' }" class="nav-link">
     <i class="fas fa-briefcase nav-icon" />
     <p>Jobs</p>
   </router-link>
               </li>
+              <li v-if="isTechnicianUser" class="nav-item">
+                  <router-link :to="{ name: 'technician.batteries.index' }" class="nav-link">
+    <i class="fas fa-battery-full nav-icon" />
+    <p>My Batteries</p>
+  </router-link>
+              </li>
 
-
-
-              <li v-if="$can('invoice-list') ||
+              <li v-if="!isTechnicianUser && ($can('invoice-list') ||
                 $can('invoice-create') ||
                 $can('invoice-view') ||
                 $can('invoice-edit') ||
-                $can('invoice-delete')
+                $can('invoice-delete'))
               " class="nav-item">
                 <router-link :to="{ name: 'pos.create' }" class="nav-link">
                   <i class="fas fa-cash-register nav-icon"></i>
                   <p>{{ $t("POS") }}</p>
                 </router-link>
               </li>
-              <li v-if="$can('invoice-return-list') ||
+              <li v-if="!isTechnicianUser && ($can('invoice-return-list') ||
                 $can('invoice-return-create') ||
                 $can('invoice-return-view') ||
                 $can('invoice-return-edit') ||
-                $can('invoice-return-delete')
+                $can('invoice-return-delete'))
               " class="nav-item">
                 <router-link :to="{ name: 'invoiceReturns.index' }" class="nav-link">
                   <i class="fas fa-undo-alt nav-icon" />
@@ -266,7 +271,7 @@
 
 
           </li>
-          <li class="nav-item">
+          <li v-if="!isTechnicianUser" class="nav-item">
           <a class="nav-link" >
            <router-link  :to="{ name: 'leads.index' }" class="nav-link"  style="padding-left: 0; padding-right: 0;">
   <i class=" nav-icon fas fa-user-plus"></i>
@@ -1060,6 +1065,13 @@ export default {
   // Map Getters
   computed: {
     ...mapGetters("operations", ["appInfo"]),
+    isTechnicianUser() {
+      const user = this.$store.getters['auth/user'];
+      return !!user && (
+        user.account_role == 0 ||
+        (Array.isArray(user.roles) && user.roles.includes('technician'))
+      );
+    }
   },
   mounted() {
     $('[data-widget="treeview"]').Treeview("init");

@@ -14,6 +14,8 @@ class EmployeeResource extends JsonResource
      */
     public function toArray($request)
     {
+        $user = $this->user_id ? $this->user : null;
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -32,10 +34,10 @@ class EmployeeResource extends JsonResource
             'appointmentDate' => $this->appointment_date,
             'joiningDate' => $this->joining_date,
             'address' => $this->address,
-            'user' => isset($this->user_id) ? $this->user : null,
-            'allowLogin' => isset($this->user_id) ? true : false,
-            'email' => isset($this->user_id) ? $this->user->email : null,
-            'role' => isset($this->user_id) ? $this->user->roles[0] : '',
+            'user' => $user,
+            'allowLogin' => (bool) ($this->user_id && $user),
+            'email' => $user?->email,
+            'role' => $user ? ($user->roles->first() ?? '') : '',
             'status' => (int) $this->status,
             'image' => $this->image_path ? asset('/images/employees/'.$this->image_path) : '',
         ];

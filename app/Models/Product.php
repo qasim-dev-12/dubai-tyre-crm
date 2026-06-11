@@ -16,7 +16,7 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        'is_service', 'name', 'slug', 'code', 'model', 'barcode_symbology', 'sub_cat_id', 'brand_id', 'unit_id', 'tax_id', 'tax_type', 'purchase_price', 'regular_price', 'discount', 'inventory_count', 'opening_stock_count', 'opening_stock_unit_price', 'alert_qty', 'note', 'status', 'image_path',
+        'is_service', 'name', 'slug', 'code', 'model', 'barcode_symbology', 'sub_cat_id', 'brand_id', 'unit_id', 'tax_id', 'tax_type', 'purchase_price', 'regular_price', 'discount', 'inventory_count', 'opening_stock_count', 'opening_stock_unit_price', 'alert_qty', 'note', 'status', 'image_path', 'product_type', 'battery_type', 'voltage', 'capacity', 'warranty',
     ];
 
     /**

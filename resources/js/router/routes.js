@@ -546,6 +546,12 @@ export default [
   middleware: 'auth'
 },
 {
+  path: '/technician/batteries',
+  name: 'technician.batteries.index',
+  component: () => import('../pages/technician/batteries/index.vue'),
+  middleware: 'auth'
+},
+{
   path: '/jobs/create',
   name: 'jobs.create',
   component: () => import('../pages/sales/jobs/create.vue'),

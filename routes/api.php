@@ -61,6 +61,7 @@ use App\Http\Controllers\API\MenuController;
 use App\Http\Controllers\API\LeadsController;
 use App\Http\Controllers\API\ServiceTypeController;
 use App\Http\Controllers\API\JobsController;
+use App\Http\Controllers\API\TechnicianBatteryStockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -220,6 +221,8 @@ Route::get('/service-types', [ServiceTypeController::class, 'index']);
 Route::post('/leads/{slug}/convert', [LeadsController::class, 'convert']);
 Route::get('/jobs', [JobsController::class, 'index']);
 Route::post('/jobs', [JobsController::class, 'store']);
+Route::get('/technician-battery-stocks', [TechnicianBatteryStockController::class, 'index']);
+Route::get('/technician-battery-stocks/{id}', [TechnicianBatteryStockController::class, 'show']);
 // Route::get('/technicians', function () {
 //     return \App\Models\User::select('id','name')->get();
 // });

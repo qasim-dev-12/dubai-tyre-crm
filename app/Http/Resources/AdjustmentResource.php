@@ -24,6 +24,8 @@ class AdjustmentResource extends JsonResource
             'note' => $this->note,
             'status' => (int) $this->status,
             'createdBy' => $this->user->name,
+            'technician' => $this->technician ? $this->technician->name : null,
+            'technicianId' => $this->technician_id,
         ];
     }
 }

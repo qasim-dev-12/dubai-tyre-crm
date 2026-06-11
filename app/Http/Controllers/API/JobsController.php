@@ -21,19 +21,17 @@ class JobsController extends Controller
     {
         $perPage = $request->get('perPage', 10);
         $term    = $request->get('term');
-         $user = $request->user(); // ✅ correct for auth:api
+        $user = $request->user(); // ✅ correct for auth:api
 
-      $query = Job::with(['serviceType', 'technician', 'payments'])->latest();
-          // 🔥 If user has Technician role
-     // 🔥 Restrict technician
-    if ($user->roles()->where('slug', 'technician')->exists()) {
+        $query = Job::with(['serviceType', 'technician', 'payments'])->latest();
 
-        if ($user->employee) {
-            $query->where('technician_id', $user->employee->id);
-        } else {
-            $query->whereRaw('1 = 0');
+        if ($this->isTechnicianUser($user)) {
+            if ($user->employee) {
+                $query->where('technician_id', $user->employee->id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
-    }
 
         // 🔎 Search support
         if ($term) {
@@ -130,6 +128,8 @@ class JobsController extends Controller
     {
         $job = Job::findOrFail($id);
 
+        $this->authorizeAssignedTechnician($request, $job);
+
         $request->validate([
             'status' => 'required|string'
         ]);
@@ -194,9 +194,12 @@ class JobsController extends Controller
     /**
      * Delete a job
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $job = Job::findOrFail($id);
+
+        $this->authorizeAssignedTechnician($request, $job);
+
         $job->delete();
 
         return response()->json(['message' => 'Job deleted']);
@@ -205,7 +208,7 @@ class JobsController extends Controller
     /**
      * Show a single job
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $job = Job::with([
             'serviceType',
@@ -213,6 +216,8 @@ class JobsController extends Controller
             'journeys',
             'payments'
         ])->findOrFail($id);
+
+        $this->authorizeAssignedTechnician($request, $job);
 
         return response()->json([
             'data' => $job
@@ -225,6 +230,8 @@ class JobsController extends Controller
     public function addPayment(Request $request, $id)
     {
         $job = Job::findOrFail($id);
+
+        $this->authorizeAssignedTechnician($request, $job);
 
         $request->validate([
             'amount' => 'required|numeric|min:1',
@@ -290,11 +297,13 @@ class JobsController extends Controller
         $job  = Job::findOrFail($id);
 
         // Must be technician
-        if (!$user->roles()->where('slug', 'technician')->exists()) {
+        if (!$this->isTechnicianUser($user)) {
             return response()->json([
                 'message' => 'Only technicians can set ETA'
             ], 403);
         }
+
+        $this->authorizeAssignedTechnician($request, $job);
 
         // Must have employee profile
         if (!$user->employee) {
@@ -382,6 +391,11 @@ class JobsController extends Controller
     public function deletePayment($id)
     {
         $payment = Payment::findOrFail($id);
+        $job = $payment->job;
+
+        if ($job) {
+            $this->authorizeAssignedTechnician(request(), $job);
+        }
 
         // delete receipt file
         if ($payment->receipt && Storage::disk('public')->exists($payment->receipt)) {
@@ -392,4 +406,24 @@ class JobsController extends Controller
 
         return response()->json(['message' => 'Payment deleted']);
     }
-}
+
+    /**
+     * Ensure technicians only access their assigned jobs.
+     */
+    protected function authorizeAssignedTechnician(Request $request, Job $job)
+    {
+        $user = $request->user();
+
+        if ($this->isTechnicianUser($user)) {
+            if (!$user->employee || $job->technician_id !== $user->employee->id) {
+                abort(403, 'You are not authorized to access this job');
+            }
+        }
+    }
+    protected function isTechnicianUser($user)
+    {
+        return $user && (
+            $user->account_role == 0 ||
+            $user->roles()->where('slug', 'technician')->exists()
+        );
+    }}

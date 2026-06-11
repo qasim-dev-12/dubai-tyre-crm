@@ -8,6 +8,7 @@
           <div class="card-header d-flex justify-content-between">
             <h4>Jobs</h4>
             <router-link
+              v-if="!isTechnicianUser"
               :to="{ name: 'jobs.create' }"
               class="btn btn-primary btn-sm"
             >
@@ -172,18 +173,9 @@
   <i class="fas fa-eye"></i>
 </router-link>
 
-<!-- Edit -->
-<router-link
-  :to="{ name: 'jobs.edit', params: { id: job.id } }"
-  class="btn btn-info btn-sm"
-  data-bs-toggle="tooltip"
-  title="Edit"
->
-  <i class="fas fa-edit"></i>
-</router-link>
-
 <!-- Payment -->
 <button
+  v-if="!isTechnicianUser"
   class="btn btn-success btn-sm"
   @click="openPaymentModal(job)"
   :disabled="job.payment_status === 'Paid'"
@@ -195,6 +187,7 @@
 
 <!-- Delete -->
 <button
+  v-if="!isTechnicianUser"
   class="btn btn-danger btn-sm"
   @click="deleteJob(job.id)"
   data-bs-toggle="tooltip"
@@ -343,8 +336,16 @@ export default {
   computed: {
     ...mapGetters("operations", ["items", "loading", "pagination"]),
     safeItems() {
-    return this.items || [];
-  }
+      return this.items || [];
+    },
+    isTechnicianUser() {
+      const user = this.$store.state.auth.user;
+      return (
+        user &&
+        (user.account_role == 0 || (Array.isArray(user.roles) && user.roles.includes("technician"))) &&
+        !(Array.isArray(user.roles) && user.roles.includes("super-admin"))
+      );
+    }
   },
 
   beforeRouteEnter(to, from, next) {

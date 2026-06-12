@@ -12,7 +12,7 @@ class TechnicianBatteryStockController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = TechnicianBatteryStock::with(['product', 'product.productBrand']);
+        $query = TechnicianBatteryStock::with(['product', 'product.proSubCategory']);
 
         if ($user && ($user->account_role == 0 || $user->roles()->where('slug', 'technician')->exists())) {
             if ($user->employee) {
@@ -27,7 +27,7 @@ class TechnicianBatteryStockController extends Controller
 
     public function show(Request $request, $id)
     {
-        $stock = TechnicianBatteryStock::with(['product', 'product.productBrand'])->findOrFail($id);
+        $stock = TechnicianBatteryStock::with(['product', 'product.proSubCategory'])->findOrFail($id);
 
         $user = $request->user();
         if ($user && ($user->account_role == 0 || $user->roles()->where('slug', 'technician')->exists())) {

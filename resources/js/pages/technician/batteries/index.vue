@@ -13,10 +13,10 @@
                   <th>#</th>
                   <th>Brand</th>
                   <th>Product Name</th>
-                  <th>Battery Type</th>
-                  <th>Voltage</th>
-                  <th>Capacity</th>
+                  <th>Product Type</th>
+                  <th>Amp (Capacity)</th>
                   <th>Total Assigned</th>
+                  <th>Reserved</th>
                   <th>Available</th>
                 </tr>
               </thead>
@@ -24,15 +24,15 @@
                 <tr v-if="loading">
                   <td colspan="8" class="text-center">Loading...</td>
                 </tr>
-                <template v-if="!loading">
+                <template v-else>
                   <tr v-for="(stock, index) in stocks" :key="stock.id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ stock.brand_name || '-' }}</td>
                     <td>{{ stock.product_name || 'N/A' }}</td>
-                    <td>{{ stock.battery_type || '-' }}</td>
-                    <td>{{ stock.voltage || '-' }}</td>
+                    <td>{{ stock.product_type || '-' }}</td>
                     <td>{{ stock.capacity || '-' }}</td>
                     <td>{{ stock.quantity }}</td>
+                    <td>{{ stock.reserved_quantity }}</td>
                     <td>{{ stock.available_quantity }}</td>
                   </tr>
                   <tr v-if="stocks.length === 0">
@@ -75,7 +75,7 @@ export default {
   data() {
     return {
       stocks: [],
-      loading: false,
+      loading: true,
       pagination: {
         current_page: 1,
         last_page: 1,

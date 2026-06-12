@@ -9,6 +9,7 @@ use App\Models\AdjustmentProduct;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventoryAdjustment;
 use App\Models\TechnicianBatteryStock;
+use App\Models\TechnicianBatteryMovement;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\AdjustmentResource;
@@ -232,8 +233,36 @@ class InventoryAdjustmentController extends Controller
                 ->useLog('Adjustment Updated')
                 ->log('Adjustment Updated');
 
-            // delete the product adjustmens
-            $adjustment->adjustmentProducts->each->delete();
+            // reverse old battery stock then delete old adjustment products
+            $oldTechnicianId = $adjustment->technician_id;
+            $oldProducts = $adjustment->adjustmentProducts()->with('product')->get();
+            foreach ($oldProducts as $oldProduct) {
+                if ($oldTechnicianId && $oldProduct->product_id) {
+                    $batteryStock = TechnicianBatteryStock::where([
+                        'technician_id' => $oldTechnicianId,
+                        'product_id' => $oldProduct->product_id,
+                    ])->first();
+                    if ($batteryStock) {
+                        // type=0: Decrement (assigned to technician) → reverse by subtracting
+                        // type=1: Increment (returned from technician) → reverse by adding
+                        $reverseDelta = $oldProduct->type == 0
+                            ? -$oldProduct->quantity
+                            : $oldProduct->quantity;
+                        $batteryStock->quantity = max(0, $batteryStock->quantity + $reverseDelta);
+                        $batteryStock->available_quantity = max(0, $batteryStock->available_quantity + $reverseDelta);
+                        $batteryStock->save();
+                        TechnicianBatteryMovement::create([
+                            'technician_id' => $oldTechnicianId,
+                            'product_id' => $oldProduct->product_id,
+                            'adjustment_id' => $adjustment->id,
+                            'movement_type' => 'returned',
+                            'quantity' => $oldProduct->quantity,
+                            'notes' => 'Reversed on adjustment update',
+                        ]);
+                    }
+                }
+                $oldProduct->delete();
+            }
 
             // store purchase products
             foreach ($request->selectedProducts as $key => $selectedProduct) {
@@ -269,6 +298,29 @@ class InventoryAdjustmentController extends Controller
                     'purchase_price' => $selectedProduct['purchasePrice'],
                     'quantity' => $selectedProduct['adjustQty'],
                 ]);
+
+                // sync technician battery stock with new quantities
+                if ($adjustment->technician_id) {
+                    $batteryStock = TechnicianBatteryStock::firstOrNew([
+                        'technician_id' => $adjustment->technician_id,
+                        'product_id' => $product->id,
+                    ]);
+                    $delta = $selectedProduct['adjustType'] == 'Increment'
+                        ? -$selectedProduct['adjustQty']
+                        : $selectedProduct['adjustQty'];
+                    $batteryStock->quantity = max(0, ($batteryStock->quantity ?? 0) + $delta);
+                    $batteryStock->available_quantity = max(0, ($batteryStock->available_quantity ?? 0) + $delta);
+                    $batteryStock->reserved_quantity = $batteryStock->reserved_quantity ?? 0;
+                    $batteryStock->save();
+                    TechnicianBatteryMovement::create([
+                        'technician_id' => $adjustment->technician_id,
+                        'product_id' => $product->id,
+                        'adjustment_id' => $adjustment->id,
+                        'movement_type' => 'allocated',
+                        'quantity' => $selectedProduct['adjustQty'],
+                        'notes' => 'Applied on adjustment update',
+                    ]);
+                }
             }
 
             DB::commit();
@@ -326,6 +378,32 @@ class InventoryAdjustmentController extends Controller
                     ])
                     ->useLog('Adjustment Deleted')
                     ->log('Adjustment Deleted');
+
+                // reverse battery stock before deleting adjustment
+                if ($adjustment->technician_id) {
+                    foreach ($adjustment->adjustmentProducts as $adjustmentProduct) {
+                        $batteryStock = TechnicianBatteryStock::where([
+                            'technician_id' => $adjustment->technician_id,
+                            'product_id' => $adjustmentProduct->product_id,
+                        ])->first();
+                        if ($batteryStock) {
+                            $reverseDelta = $adjustmentProduct->type == 0
+                                ? -$adjustmentProduct->quantity
+                                : $adjustmentProduct->quantity;
+                            $batteryStock->quantity = max(0, $batteryStock->quantity + $reverseDelta);
+                            $batteryStock->available_quantity = max(0, $batteryStock->available_quantity + $reverseDelta);
+                            $batteryStock->save();
+                            TechnicianBatteryMovement::create([
+                                'technician_id' => $adjustment->technician_id,
+                                'product_id' => $adjustmentProduct->product_id,
+                                'adjustment_id' => $adjustment->id,
+                                'movement_type' => 'returned',
+                                'quantity' => $adjustmentProduct->quantity,
+                                'notes' => 'Reversed on adjustment delete',
+                            ]);
+                        }
+                    }
+                }
 
                 $adjustment->delete();
             } else {

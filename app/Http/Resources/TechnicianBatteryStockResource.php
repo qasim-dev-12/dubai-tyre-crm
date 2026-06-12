@@ -8,16 +8,17 @@ class TechnicianBatteryStockResource extends JsonResource
 {
     public function toArray($request)
     {
-        $product = $this->product;
-        $brand   = $product?->productBrand;
+        $product  = $this->product;
+        $subCat   = $product?->proSubCategory;
 
         return [
             'id'                 => $this->id,
             'technician_id'      => $this->technician_id,
             'product_id'         => $this->product_id,
-            'brand_name'         => $brand?->name ?? null,
+            'brand_name'         => $subCat?->name ?? null,
             'product_name'       => $product?->name ?? null,
             'product_code'       => $product?->code ?? null,
+            'product_type'       => $product?->product_type ?? null,
             'battery_type'       => $product?->battery_type ?? null,
             'voltage'            => $product?->voltage ?? null,
             'capacity'           => $product?->capacity ?? null,

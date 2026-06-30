@@ -13,7 +13,7 @@ class TechnicianBatteryStock extends Model
         'technician_id',
         'product_id',
         'quantity',
-        'reserved_quantity',
+        'used_quantity',
         'available_quantity',
     ];
 

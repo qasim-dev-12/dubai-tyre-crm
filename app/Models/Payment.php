@@ -13,7 +13,12 @@ class Payment extends Model
         'payment_method',
         'reference_number',
         'notes',
-         'receipt' // ✅ ADD THIS
+        'receipt',
+        'battery_details',
+    ];
+
+    protected $casts = [
+        'battery_details' => 'array',
     ];
 
     public function job()

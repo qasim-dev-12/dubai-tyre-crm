@@ -7,6 +7,8 @@ use App\Models\Job;
 use App\Models\JobJourney;
 use App\Models\Payment;
 use App\Models\ServiceType;
+use App\Models\TechnicianBatteryStock;
+use App\Models\TechnicianBatteryMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -233,11 +235,22 @@ class JobsController extends Controller
 
         $this->authorizeAssignedTechnician($request, $job);
 
-        $request->validate([
+        // Determine if this is a battery-completion payment (has battery_details with selected_stock_id)
+        $batteryDetails = null;
+        if ($request->battery_details) {
+            $batteryDetails = is_string($request->battery_details)
+                ? json_decode($request->battery_details, true)
+                : $request->battery_details;
+        }
+        $isBatteryPayment = !empty($batteryDetails['selected_stock_id']);
+
+        $rules = [
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|in:Cash,Bank Transfer,POS,POL',
-            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
-        ]);
+            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+
+        $request->validate($rules);
 
         if ($job->payment_status === 'Paid') {
             return response()->json([
@@ -251,18 +264,15 @@ class JobsController extends Controller
             ], 422);
         }
 
-        $receiptPath = null;
-
-        if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
-        }
+        $receiptPath = $request->file('receipt')->store('receipts', 'public');
 
         $payment = $job->payments()->create([
             'amount' => $request->amount,
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
             'notes' => $request->notes,
-            'receipt' => $receiptPath
+            'receipt' => $receiptPath,
+            'battery_details' => $batteryDetails,
         ]);
 
         $totalPaid = $job->payments()->sum('amount');
@@ -280,6 +290,26 @@ class JobsController extends Controller
         }
 
         $job->save();
+
+        // Decrement technician battery stock ONLY when job is fully paid (completed)
+        if ($isBatteryPayment && $job->due_amount <= 0) {
+            $stockId = $batteryDetails['selected_stock_id'];
+            $stock = TechnicianBatteryStock::find($stockId);
+            if ($stock) {
+                $stock->used_quantity      = ($stock->used_quantity ?? 0) + 1;
+                $stock->available_quantity = max(0, ($stock->available_quantity ?? 0) - 1);
+                $stock->save();
+
+                TechnicianBatteryMovement::create([
+                    'technician_id' => $stock->technician_id,
+                    'product_id'    => $stock->product_id,
+                    'movement_type' => 'job_used',
+                    'quantity'      => 1,
+                    'job_id'        => $job->id,
+                    'notes'         => 'Used in job #' . $job->id,
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Payment added successfully',
@@ -353,7 +383,7 @@ class JobsController extends Controller
     }
 
     /**
-     * Update payment details
+     * Update payment details and recalculate job totals
      */
     public function updatePayment(Request $request, $id)
     {
@@ -362,7 +392,7 @@ class JobsController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required',
-            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048'
+            'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120'
         ]);
 
         $payment->amount = $request->amount;
@@ -370,17 +400,30 @@ class JobsController extends Controller
         $payment->reference_number = $request->reference_number;
         $payment->notes = $request->notes;
 
-        // Handle receipt update
         if ($request->hasFile('receipt')) {
-            // delete old file
             if ($payment->receipt && Storage::disk('public')->exists($payment->receipt)) {
                 Storage::disk('public')->delete($payment->receipt);
             }
-
             $payment->receipt = $request->file('receipt')->store('receipts', 'public');
         }
 
         $payment->save();
+
+        // Recalculate job payment totals
+        $job = $payment->job;
+        if ($job) {
+            $totalPaid = $job->payments()->sum('amount');
+            $job->paid_amount = $totalPaid;
+            $job->due_amount  = $job->price - $totalPaid;
+            if ($job->due_amount <= 0) {
+                $job->payment_status = 'Paid';
+            } elseif ($totalPaid > 0) {
+                $job->payment_status = 'Partial';
+            } else {
+                $job->payment_status = 'Unpaid';
+            }
+            $job->save();
+        }
 
         return response()->json(['message' => 'Payment updated']);
     }
@@ -403,6 +446,21 @@ class JobsController extends Controller
         }
 
         $payment->delete();
+
+        // Recalculate job payment totals after deletion
+        if ($job) {
+            $totalPaid = $job->payments()->sum('amount');
+            $job->paid_amount = $totalPaid;
+            $job->due_amount  = $job->price - $totalPaid;
+            if ($job->due_amount <= 0) {
+                $job->payment_status = 'Paid';
+            } elseif ($totalPaid > 0) {
+                $job->payment_status = 'Partial';
+            } else {
+                $job->payment_status = 'Unpaid';
+            }
+            $job->save();
+        }
 
         return response()->json(['message' => 'Payment deleted']);
     }

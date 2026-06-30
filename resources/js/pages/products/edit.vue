@@ -58,6 +58,27 @@
                     <option value="battery">Battery</option>
                   </select>
                 </div>
+
+                <!-- Battery-specific fields -->
+                <template v-if="form.productType === 'battery'">
+                  <div class="form-group col-md-6 col-xl-3">
+                    <label>Battery Type</label>
+                    <input v-model="form.batteryType" class="form-control" placeholder="e.g. Dry, Wet" />
+                  </div>
+                  <div class="form-group col-md-6 col-xl-2">
+                    <label>Voltage (V)</label>
+                    <input v-model="form.voltage" class="form-control" placeholder="e.g. 12" />
+                  </div>
+                  <div class="form-group col-md-6 col-xl-2">
+                    <label>Amp / Capacity (Ah)</label>
+                    <input v-model="form.capacity" class="form-control" placeholder="e.g. 74" />
+                  </div>
+                  <div class="form-group col-md-6 col-xl-2">
+                    <label>Warranty (months)</label>
+                    <input v-model="form.warranty" class="form-control" placeholder="e.g. 12" />
+                  </div>
+                </template>
+
                 <div class="form-group col-md-6 col-xl-3">
                   <div class="input-group">
                     <label for="itemCode" class="col-md-12">{{ $t('Item code') }}"
@@ -309,6 +330,10 @@ export default {
       brand: '',
       itemUnit: '',
       productType: 'tyre',
+      batteryType: '',
+      voltage: '',
+      capacity: '',
+      warranty: '',
       productTax: '',
       taxType: 'Exclusive',
       purchasePrice: '',
@@ -385,6 +410,10 @@ export default {
       this.form.barcodeSymbology = data.data.symbology
       // this.form.brand = data.data.itemBrand
       this.form.productType = data.data.productType || 'tyre'
+      this.form.batteryType = data.data.batteryType || ''
+      this.form.voltage = data.data.voltage || ''
+      this.form.capacity = data.data.capacity || ''
+      this.form.warranty = data.data.warranty || ''
       this.form.productTax = data.data.itemTax
       this.form.taxType = data.data.taxType
       this.form.subCategory = data.data.subCategory

@@ -118,26 +118,10 @@
 
 
 
-<!-- Technician: Can Edit -->
+<!-- Updated ETA: view only on list -->
 <td>
-  <!-- Technician: Can Edit -->
-  <div v-if="isAssignedTechnician(job)">
- <input
-  type="number"
-  v-model="job.eta_minutes"
-  @input="debouncedUpdateEta(job)"
-  class="form-control form-control-sm"
-  placeholder="Minutes"
-/>
-  </div>
-
-  <!-- Admin & Others: View Only -->
-  <div v-else>
-    <span v-if="job.eta_time">
-      {{ job.eta_time }}
-    </span>
-    <span v-else>-</span>
-  </div>
+  <span v-if="job.eta_time">{{ job.eta_time }}</span>
+  <span v-else>-</span>
 </td>
                      <!-- ✅ DROPDOWN TO UPDATE STATUS -->
 

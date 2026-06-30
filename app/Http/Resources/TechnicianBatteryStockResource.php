@@ -22,8 +22,9 @@ class TechnicianBatteryStockResource extends JsonResource
             'battery_type'       => $product?->battery_type ?? null,
             'voltage'            => $product?->voltage ?? null,
             'capacity'           => $product?->capacity ?? null,
+            'warranty'           => $product?->warranty ?? null,
             'quantity'           => $this->quantity,
-            'reserved_quantity'  => $this->reserved_quantity,
+            'used_quantity'      => $this->used_quantity,
             'available_quantity' => $this->available_quantity,
         ];
     }

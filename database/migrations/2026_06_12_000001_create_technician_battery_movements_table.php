@@ -8,13 +8,15 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('technician_battery_movements', function (Blueprint $table) {
-            $table->foreignId('adjustment_id')
-                ->nullable()
-                ->after('job_id')
-                ->constrained('inventory_adjustments')
-                ->nullOnDelete();
-        });
+        if (Schema::hasTable('technician_battery_movements') && !Schema::hasColumn('technician_battery_movements', 'adjustment_id')) {
+            Schema::table('technician_battery_movements', function (Blueprint $table) {
+                $table->foreignId('adjustment_id')
+                    ->nullable()
+                    ->after('job_id')
+                    ->constrained('inventory_adjustments')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     public function down()

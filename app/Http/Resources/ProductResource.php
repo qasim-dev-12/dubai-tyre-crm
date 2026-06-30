@@ -43,6 +43,11 @@ class ProductResource extends JsonResource
             'note' => $this->note,
             'status' => (int) $this->status,
             'image' => $this->image_path ? asset('/images/products/'.$this->image_path) : '',
+            'productType' => $this->product_type,
+            'batteryType' => $this->battery_type,
+            'voltage' => $this->voltage,
+            'capacity' => $this->capacity,
+            'warranty' => $this->warranty,
         ];
     }
 }

@@ -132,7 +132,7 @@ class InventoryAdjustmentController extends Controller
 
                 $batteryStock->quantity = max(0, ($batteryStock->quantity ?? 0) + $delta);
                 $batteryStock->available_quantity = max(0, ($batteryStock->available_quantity ?? 0) + $delta);
-                $batteryStock->reserved_quantity = $batteryStock->reserved_quantity ?? 0;
+                $batteryStock->used_quantity = $batteryStock->used_quantity ?? 0;
                 $batteryStock->save();
             }
 
@@ -310,7 +310,7 @@ class InventoryAdjustmentController extends Controller
                         : $selectedProduct['adjustQty'];
                     $batteryStock->quantity = max(0, ($batteryStock->quantity ?? 0) + $delta);
                     $batteryStock->available_quantity = max(0, ($batteryStock->available_quantity ?? 0) + $delta);
-                    $batteryStock->reserved_quantity = $batteryStock->reserved_quantity ?? 0;
+                    $batteryStock->used_quantity = $batteryStock->used_quantity ?? 0;
                     $batteryStock->save();
                     TechnicianBatteryMovement::create([
                         'technician_id' => $adjustment->technician_id,

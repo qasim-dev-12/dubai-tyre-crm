@@ -87,11 +87,11 @@
                               i - 1
                             )
                             " :id="`adjustType-${i}`" required>
-                            <option value="Increment">
-                              {{ $t("Increment") }}
-                            </option>
                             <option value="Decrement">
-                              {{ $t("Decrement") }}
+                              {{ $t("Assign to Technician") }}
+                            </option>
+                            <option value="Increment">
+                              {{ $t("Return to Warehouse") }}
                             </option>
                           </select>
                         </td>
@@ -276,7 +276,7 @@ export default {
           itemCode: product.code,
           purchasePrice: product.avgPurchasePrice,
           stockQty: product.inventoryCount,
-          adjustType: "Increment",
+          adjustType: "Decrement",
           adjustQty: quantity,
           maxQty: 9999,
         });

@@ -82,8 +82,23 @@
   </div>
 
   <div class="form-group col-md-2">
-    <label>Amp</label>
-    <input v-model="form.amp" class="form-control" />
+    <label>Battery Type</label>
+    <input v-model="form.batteryType" class="form-control" placeholder="e.g. Dry, Wet" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Voltage (V)</label>
+    <input v-model="form.voltage" class="form-control" placeholder="e.g. 12" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Amp / Capacity (Ah)</label>
+    <input v-model="form.capacity" class="form-control" placeholder="e.g. 74" />
+  </div>
+
+  <div class="form-group col-md-2">
+    <label>Warranty (months)</label>
+    <input v-model="form.warranty" class="form-control" placeholder="e.g. 12" />
   </div>
 
   <div class="form-group col-md-2">

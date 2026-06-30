@@ -16,7 +16,7 @@
     <div class="sidebar custom-sidebar">
       <!-- menu search -->
 
-      <div class="search-area sidebar-search-wrapper mt-4">
+      <div v-if="!isTechnicianUser" class="search-area sidebar-search-wrapper mt-4">
         <div class="menu-search-btn" :class="[this.menuSearchQuery !== '' ? 'd-none' : 'd-inline-block']">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"
             stroke-width="2">
@@ -30,7 +30,7 @@
           <i class="fas fa-times" />
         </label>
       </div>
-      <div v-if="menuSearchQuery" id="searchMenuResult">
+      <div v-if="!isTechnicianUser && menuSearchQuery" id="searchMenuResult">
         <nav class="py-3 pb-5">
           <ul v-if="menuItems.length" class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
             <li v-for="(menuItem, index) in menuItems" :key="index" class="nav-item">
@@ -46,15 +46,35 @@
       <!-- Sidebar Menu -->
       <nav class="py-3 pb-5" :class="{ 'd-none': menuSearchQuery }">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-          <li class="nav-header text-uppercase text-bold">
+          <li v-if="!isTechnicianUser" class="nav-header text-uppercase text-bold">
             {{ $t("Dashboard") }}
           </li>
-          <li class="nav-item">
+          <li v-if="!isTechnicianUser" class="nav-item">
             <router-link :to="{ name: 'home' }" class="nav-link">
               <i class="nav-icon fas fa-home" />
               <p>{{ $t("Dashboard") }}</p>
             </router-link>
           </li>
+
+          <!-- Technician-only items -->
+          <template v-if="isTechnicianUser">
+            <li class="nav-header text-uppercase text-bold">MY WORK</li>
+            <li class="nav-item">
+              <router-link :to="{ name: 'jobs.index' }" class="nav-link">
+                <i class="fas fa-briefcase nav-icon" />
+                <p>Assigned Jobs</p>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link :to="{ name: 'technician.batteries.index' }" class="nav-link">
+                <i class="fas fa-battery-full nav-icon" />
+                <p>My Batteries</p>
+              </router-link>
+            </li>
+          </template>
+
+          <!-- Non-technician menus -->
+          <template v-if="!isTechnicianUser">
           <li class="nav-header text-bold">{{ $t("ACTIVITIES") }}</li>
           <li v-if="$can('expense-category-list') ||
             $can('expense-category-create') ||
@@ -981,6 +1001,8 @@
           </li>
 
 
+          </template>
+          <!-- Account: visible to all users -->
           <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-user" />
@@ -1004,7 +1026,7 @@
               </li>
             </ul>
           </li>
-          <li class="nav-item has-treeview">
+          <li v-if="!isTechnicianUser" class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-user" />
               <p>

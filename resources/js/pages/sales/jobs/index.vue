@@ -25,6 +25,7 @@
               <table class="table">
               <thead>
   <tr>
+    <th class="sticky-col"></th>
     <th>SL</th>
     <th>Name</th>
     <th>Service</th>
@@ -49,6 +50,15 @@
                 <tbody>
                   <tr v-for="(job, i) in safeItems" :key="job.id">
 
+                    <td class="sticky-col">
+                      <router-link
+                        :to="{ name: 'jobs.show', params: { id: job.id } }"
+                        class="btn btn-primary btn-sm"
+                        title="View full record"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </router-link>
+                    </td>
                     <td>
   <span v-if="pagination && pagination.current_page > 1">
     {{
@@ -548,6 +558,13 @@ updatePerPage() {
 
 </script>
 <style scoped>
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+}
+
 .payment-modal {
   position: fixed;
   top: 0;

@@ -418,13 +418,18 @@ async deleteJob(id) {
   }
 },
 
+getStatusIndex(job) {
+  const status = (job.status || "").trim().toLowerCase();
+  return STATUS_FLOW.findIndex((s) => s.toLowerCase() === status);
+},
+
 getNextStatus(job) {
-  const index = STATUS_FLOW.indexOf(job.status);
+  const index = this.getStatusIndex(job);
   return STATUS_FLOW[index + 1] || null;
 },
 
 getPreviousStatus(job) {
-  const index = STATUS_FLOW.indexOf(job.status);
+  const index = this.getStatusIndex(job);
   return STATUS_FLOW[index - 1] || null;
 },
 

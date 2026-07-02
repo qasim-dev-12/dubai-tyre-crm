@@ -133,12 +133,14 @@ class JobsController extends Controller
         $this->authorizeAssignedTechnician($request, $job);
 
         $request->validate([
-            'status' => 'required|string'
+            'status' => 'required|string|in:' . implode(',', Job::STATUS_FLOW)
         ]);
 
         $flow = Job::STATUS_FLOW;
 
-        $currentIndex = array_search($job->status, $flow);
+        // Case-insensitive lookup so legacy/dirty status values (e.g. "assigned"
+        // instead of "Assigned") don't permanently lock a job out of transitions.
+        $currentIndex = array_search(strtolower(trim($job->status)), array_map('strtolower', $flow));
         $newIndex     = array_search($request->status, $flow);
 
         if ($newIndex === false) {

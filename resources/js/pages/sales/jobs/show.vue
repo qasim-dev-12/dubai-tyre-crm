@@ -438,7 +438,8 @@ export default {
       return this.job?.service_type?.name?.toLowerCase().includes('battery') ?? false
     },
     currentIndex() {
-      return STATUS_FLOW.indexOf(this.job?.status)
+      const status = (this.job?.status || '').trim().toLowerCase()
+      return STATUS_FLOW.findIndex(s => s.toLowerCase() === status)
     },
     nextStatus() {
       return STATUS_FLOW[this.currentIndex + 1] || null

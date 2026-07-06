@@ -22,26 +22,16 @@
             <table-loading v-show="loading" />
 
             <div class="table-responsive">
-              <table class="table">
+              <table class="table jobs-table">
               <thead>
   <tr>
-    <th class="sticky-col"></th>
     <th>SL</th>
     <th>Name</th>
     <th>Service</th>
     <th>Area</th>
     <th>Price</th>
-    <th>Mobile</th>
-    <th>Vehicle</th>
-    <th>Technician</th>
-    <th>ETA</th>
-    <th>Location</th>
     <th>Status</th>
     <th>Payment</th>
-
-    <th>Updated Eta</th>         <!-- Show current -->
-    <th>Update Status</th>
-     <!-- Dropdown -->
     <th class="text-right">Action</th>
   </tr>
 </thead>
@@ -50,16 +40,7 @@
                 <tbody>
                   <tr v-for="(job, i) in safeItems" :key="job.id">
 
-                    <td class="sticky-col">
-                      <router-link
-                        :to="{ name: 'jobs.show', params: { id: job.id } }"
-                        class="btn btn-primary btn-sm"
-                        title="View full record"
-                      >
-                        <i class="fas fa-eye"></i>
-                      </router-link>
-                    </td>
-                    <td>
+                    <td data-label="SL">
   <span v-if="pagination && pagination.current_page > 1">
     {{
       pagination.per_page * (pagination.current_page - 1) + (i + 1)
@@ -67,24 +48,11 @@
   </span>
   <span v-else>{{ i + 1 }}</span>
 </td>
-                    <td>{{ job.name }}</td>
-                    <td>{{ job.service_type?.name }}</td>
-                    <td>{{ job.area }}</td>
-<td>{{ job.price }}</td>
-                    <td>{{ job.mobile }}</td>
-                    <td>{{ job.vehicle_number }}</td>
-                    <td>{{ job.technician?.name }}</td>
-                    <td>
-  <div v-if="job.eta_minutes && job.eta_started_at">
-    <strong>{{ job.eta_time }}</strong>
-    <small>({{ remainingMinutes(job) }} min)</small>
-  </div>
-  <div v-else>
-    -
-  </div>
-</td>
-                    <td>{{ job.location_text }}</td>
-        <td>
+                    <td data-label="Name"><span class="truncate" :title="job.name">{{ job.name }}</span></td>
+                    <td data-label="Service"><span class="truncate" :title="job.service_type?.name">{{ job.service_type?.name }}</span></td>
+                    <td data-label="Area"><span class="truncate" :title="job.area">{{ job.area }}</span></td>
+<td data-label="Price">{{ job.price }}</td>
+        <td data-label="Status">
   <span
     class="badge"
     :class="{
@@ -97,12 +65,9 @@
   >
     {{ job.status }}
   </span>
-
-  <!-- Payment Badge -->
-
 </td>
 
-<td>
+<td data-label="Payment">
     <span
     v-if="job.payment_status === 'Partial'"
     class="badge bg-warning ml-1"
@@ -125,44 +90,15 @@
   </span>
 </td>
 
-
-
-
-<!-- Updated ETA: view only on list -->
-<td>
-  <span v-if="job.eta_time">{{ job.eta_time }}</span>
-  <span v-else>-</span>
-</td>
-                     <!-- ✅ DROPDOWN TO UPDATE STATUS -->
-
-   <td>
-  <button
-    v-if="getNextStatus(job)"
-    class="btn btn-sm btn-primary"
-    @click="updateStatusDirect(job, getNextStatus(job))"
-  >
-    {{ getNextStatus(job) }}
-  </button>
-
-  <button
-    v-if="getPreviousStatus(job) && job.payment_status !== 'Paid'"
-    class="btn btn-sm btn-warning ml-1"
-    @click="updateStatusDirect(job, getPreviousStatus(job))"
-  >
-    ←
-  </button>
-</td>
-
-   <td class="text-right">
+   <td class="text-right" data-label="Action">
     <div class="btn-group">
-
 
      <!-- View -->
 <router-link
   :to="{ name: 'jobs.show', params: { id: job.id } }"
   class="btn btn-primary btn-sm"
   data-bs-toggle="tooltip"
-  title="View"
+  title="View full details"
 >
   <i class="fas fa-eye"></i>
 </router-link>
@@ -197,7 +133,7 @@
                   </tr>
 
                   <tr v-if="!loading && safeItems.length === 0">
-                    <td colspan="7" class="text-center">
+                    <td colspan="8" class="text-center">
                       No Jobs Found
                     </td>
                   </tr>
@@ -285,14 +221,6 @@
 <script>
 import { mapGetters } from "vuex";
 import axios from "axios";
-const STATUS_FLOW = [
-  "Assigned",
-  "DCC",
-  "On The Way",
-  "Reached",
-  "Job Started",
-  "Job Completed"
-];
 
 export default {
    mounted() {
@@ -428,34 +356,6 @@ async deleteJob(id) {
   }
 },
 
-getStatusIndex(job) {
-  const status = (job.status || "").trim().toLowerCase();
-  return STATUS_FLOW.findIndex((s) => s.toLowerCase() === status);
-},
-
-getNextStatus(job) {
-  const index = this.getStatusIndex(job);
-  return STATUS_FLOW[index + 1] || null;
-},
-
-getPreviousStatus(job) {
-  const index = this.getStatusIndex(job);
-  return STATUS_FLOW[index - 1] || null;
-},
-
-async updateStatusDirect(job, newStatus) {
-  try {
-    await axios.put(`/api/jobs/${job.id}/status`, {
-      status: newStatus
-    });
-
-    job.status = newStatus;
-    this.$toast.success("Status updated");
-
-  } catch (error) {
-    this.$toast.error(error.response?.data?.message || "Failed");
-  }
-},
 timeAgo(date) {
   if (!date) return '';
 
@@ -558,11 +458,129 @@ updatePerPage() {
 
 </script>
 <style scoped>
-.sticky-col {
-  position: sticky;
-  left: 0;
-  background: #fff;
-  z-index: 2;
+/* Fixed layout so the table always fits the container width, no matter
+   how long a name/service/area value is — overflow truncates, it never
+   pushes the table wider than the screen. Desktop only; mobile switches
+   to stacked cards below (which need full-width blocks instead). */
+@media (min-width: 769px) {
+  .jobs-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .jobs-table th:nth-child(1), .jobs-table td:nth-child(1) { width: 6%; }
+  .jobs-table th:nth-child(2), .jobs-table td:nth-child(2) { width: 22%; }
+  .jobs-table th:nth-child(3), .jobs-table td:nth-child(3) { width: 16%; }
+  .jobs-table th:nth-child(4), .jobs-table td:nth-child(4) { width: 14%; }
+  .jobs-table th:nth-child(5), .jobs-table td:nth-child(5) { width: 10%; }
+  .jobs-table th:nth-child(6), .jobs-table td:nth-child(6) { width: 12%; }
+  .jobs-table th:nth-child(7), .jobs-table td:nth-child(7) { width: 10%; }
+  .jobs-table th:nth-child(8), .jobs-table td:nth-child(8) { width: 10%; }
+}
+
+.jobs-table .truncate {
+  display: block;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.jobs-table thead th {
+  background: #f8f9fb;
+  color: #6b7280;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  border-bottom: 2px solid #edeff2;
+  white-space: nowrap;
+}
+
+.jobs-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.jobs-table tbody tr:hover {
+  background-color: #f5f6ff;
+}
+
+.jobs-table td {
+  vertical-align: middle;
+}
+
+.jobs-table .badge {
+  font-weight: 600;
+  padding: 0.4em 0.7em;
+  border-radius: 6px;
+}
+
+.jobs-table .btn-group .btn {
+  border-radius: 6px !important;
+  margin-right: 4px;
+}
+
+/* Mobile: stack each row as a card instead of scrolling horizontally */
+@media (max-width: 768px) {
+  .jobs-table thead {
+    display: none;
+  }
+
+  .jobs-table,
+  .jobs-table tbody,
+  .jobs-table tr,
+  .jobs-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .jobs-table tr {
+    margin-bottom: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  .jobs-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border: none !important;
+    text-align: right;
+  }
+
+  .jobs-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    text-align: left;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .jobs-table .truncate {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .jobs-table td.text-right {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .jobs-table td.text-right::before {
+    content: none;
+  }
+
+  .jobs-table .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
 }
 
 .payment-modal {

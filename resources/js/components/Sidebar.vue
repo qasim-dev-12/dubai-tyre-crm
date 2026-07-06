@@ -257,6 +257,12 @@
     <p>Jobs</p>
   </router-link>
               </li>
+              <li v-if="!isTechnicianUser && $can('job-list')" class="nav-item">
+                  <router-link :to="{ name: 'warranty-claims.index' }" class="nav-link">
+    <i class="fas fa-shield-alt nav-icon" />
+    <p>Warranty Claims</p>
+  </router-link>
+              </li>
               <li v-if="isTechnicianUser" class="nav-item">
                   <router-link :to="{ name: 'technician.batteries.index' }" class="nav-link">
     <i class="fas fa-battery-full nav-icon" />

@@ -49,7 +49,8 @@ class Job extends Model
         'buying_price',
         'selling_price',
         'service_charges',
-        'client_id'
+        'client_id',
+        'warranty_claim_source_payment_id'
     ];
        protected $casts = [
         'on_the_way_at' => 'datetime',
@@ -91,5 +92,10 @@ class Job extends Model
 {
     return $this->hasMany(JobJourney::class)->latest();
 }
+
+    public function warrantyClaimSourcePayment()
+    {
+        return $this->belongsTo(Payment::class, 'warranty_claim_source_payment_id');
+    }
 
 }

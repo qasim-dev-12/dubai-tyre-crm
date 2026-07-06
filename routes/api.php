@@ -61,6 +61,7 @@ use App\Http\Controllers\API\MenuController;
 use App\Http\Controllers\API\LeadsController;
 use App\Http\Controllers\API\ServiceTypeController;
 use App\Http\Controllers\API\JobsController;
+use App\Http\Controllers\API\WarrantyClaimController;
 use App\Http\Controllers\API\TechnicianBatteryStockController;
 
 /*
@@ -235,6 +236,11 @@ Route::get('/technicians', [EmployeeController::class, 'technicians']);
 Route::post('/jobs/{id}/payments', [JobsController::class, 'addPayment']);
 
 Route::post('/jobs/{id}/update-eta', [JobsController::class, 'updateEta']);
+
+// Warranty claim routes
+Route::get('/warranty-claims', [WarrantyClaimController::class, 'index']);
+Route::post('/warranty-claims/{id}/claim', [WarrantyClaimController::class, 'claim']);
+
     // Balance routes
     Route::get('/balances/search', [BalanceController::class, 'search']);
     Route::get('/all-balances', [BalanceController::class, 'allBalances']);

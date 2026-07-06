@@ -562,6 +562,12 @@ export default [
   name: 'jobs.show',
   component: () => import('../pages/sales/jobs/show.vue'),
   middleware: 'auth'
+},
+{
+  path: '/warranty-claims',
+  name: 'warranty-claims.index',
+  component: () => import('../pages/sales/warranty/index.vue'),
+  middleware: 'auth'
 }
 ,
   {

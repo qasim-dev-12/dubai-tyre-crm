@@ -15,15 +15,34 @@ class Payment extends Model
         'notes',
         'receipt',
         'battery_details',
+        'warranty_months',
+        'warranty_expires_at',
+        'is_warranty_claimed',
+        'warranty_claimed_at',
+        'replacement_job_id',
+        'claim_of_payment_id',
     ];
 
     protected $casts = [
         'battery_details' => 'array',
+        'warranty_expires_at' => 'datetime',
+        'is_warranty_claimed' => 'boolean',
+        'warranty_claimed_at' => 'datetime',
     ];
 
     public function job()
     {
         return $this->belongsTo(Job::class);
+    }
+
+    public function replacementJob()
+    {
+        return $this->belongsTo(Job::class, 'replacement_job_id');
+    }
+
+    public function claimOfPayment()
+    {
+        return $this->belongsTo(Payment::class, 'claim_of_payment_id');
     }
     public function payments()
 {

@@ -143,6 +143,7 @@
             <th>Reference</th>
             <th>Notes</th>
             <th>Battery Info</th>
+            <th>Warranty</th>
             <th>Receipt</th>
             <th>Actions</th>
           </tr>
@@ -166,6 +167,13 @@
               <span v-else>-</span>
             </td>
             <td>
+              <span v-if="!payment.warranty_expires_at">-</span>
+              <span v-else-if="payment.claim_of_payment_id" class="badge bg-secondary">Replacement (no claim)</span>
+              <span v-else-if="payment.is_warranty_claimed" class="badge bg-info">Claimed</span>
+              <span v-else-if="warrantyDaysLeft(payment) > 0" class="badge bg-success">{{ warrantyDaysLeft(payment) }} days left</span>
+              <span v-else class="badge bg-danger">Expired</span>
+            </td>
+            <td>
               <a v-if="payment.receipt" :href="`/storage/${payment.receipt}`" target="_blank" class="btn btn-sm btn-primary">View</a>
               <span v-else>-</span>
             </td>
@@ -175,7 +183,7 @@
             </td>
           </tr>
           <tr v-if="!job?.payments || job.payments.length === 0">
-            <td colspan="7" class="text-center">No Payments Found</td>
+            <td colspan="8" class="text-center">No Payments Found</td>
           </tr>
         </tbody>
       </table>
@@ -247,14 +255,18 @@
           </span>
         </div>
 
+        <div v-if="Number(job.due_amount) <= 0" class="alert alert-success py-2 px-3 mb-3 small">
+          Free warranty replacement — no payment due.
+        </div>
+
         <div class="row">
           <div class="col-md-6">
-            <label class="small font-weight-bold">Payment Amount <span class="text-danger">*</span></label>
+            <label class="small font-weight-bold">Payment Amount <span v-if="Number(job.due_amount) > 0" class="text-danger">*</span></label>
             <input v-model="batteryForm.amount" type="number" class="form-control form-control-sm mb-1" :class="{ 'is-invalid': formErrors.amount }" :placeholder="`Due: ${job.due_amount}`" />
             <div v-if="formErrors.amount" class="invalid-feedback d-block mb-1">{{ formErrors.amount }}</div>
           </div>
           <div class="col-md-6">
-            <label class="small font-weight-bold">Payment Method <span class="text-danger">*</span></label>
+            <label class="small font-weight-bold">Payment Method <span v-if="Number(job.due_amount) > 0" class="text-danger">*</span></label>
             <select v-model="batteryForm.payment_method" class="form-control form-control-sm mb-1" :class="{ 'is-invalid': formErrors.payment_method }">
               <option value="">Select Method</option>
               <option>Cash</option>
@@ -539,6 +551,11 @@ export default {
       }
     },
 
+    warrantyDaysLeft(payment) {
+      if (!payment.warranty_expires_at) return 0
+      return Math.ceil((new Date(payment.warranty_expires_at) - new Date()) / 86400000)
+    },
+
     validateBatteryForm() {
       const errors = {}
       const f = this.batteryForm
@@ -549,8 +566,10 @@ export default {
       if (!f.voltage) errors.voltage = 'Voltage is required'
       if (!f.capacity) errors.capacity = 'Capacity is required'
       if (!f.warranty) errors.warranty = 'Warranty is required'
-      if (!f.amount || Number(f.amount) <= 0) errors.amount = 'Payment amount is required'
-      if (!f.payment_method) errors.payment_method = 'Payment method is required'
+      if (Number(this.job.due_amount) > 0) {
+        if (!f.amount || Number(f.amount) <= 0) errors.amount = 'Payment amount is required'
+        if (!f.payment_method) errors.payment_method = 'Payment method is required'
+      }
       if (!f.receipt) errors.receipt = 'Receipt upload is required'
       this.formErrors = errors
       return Object.keys(errors).length === 0
@@ -562,8 +581,8 @@ export default {
         this.$toast.error('Please fill all required fields')
         return
       }
-      // Full payment required to complete the job
-      if (Number(this.batteryForm.amount) < Number(this.job.due_amount)) {
+      // Full payment required to complete the job (skipped for free/no-charge jobs, e.g. warranty replacements)
+      if (Number(this.job.due_amount) > 0 && Number(this.batteryForm.amount) < Number(this.job.due_amount)) {
         this.$toast.error(
           `Full payment of ${this.job.due_amount} is required to complete this job. ` +
           `Please enter the full due amount to mark the job as completed.`
@@ -574,8 +593,8 @@ export default {
       try {
         // Save payment — backend automatically sets Job Completed when fully paid
         const fd = new FormData()
-        fd.append('amount', this.batteryForm.amount)
-        fd.append('payment_method', this.batteryForm.payment_method)
+        fd.append('amount', this.batteryForm.amount || 0)
+        fd.append('payment_method', this.batteryForm.payment_method || '')
         fd.append('reference_number', this.batteryForm.reference_number || '')
         fd.append('notes', this.batteryForm.notes || '')
         fd.append('battery_details', JSON.stringify({

@@ -246,9 +246,13 @@ class JobsController extends Controller
         }
         $isBatteryPayment = !empty($batteryDetails['selected_stock_id']);
 
+        // A job with nothing due (e.g. a free warranty-replacement battery job)
+        // doesn't require a real payment — just the battery/receipt record.
+        $noPaymentDue = $job->due_amount <= 0;
+
         $rules = [
-            'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|in:Cash,Bank Transfer,POS,POL',
+            'amount' => $noPaymentDue ? 'nullable|numeric|min:0' : 'required|numeric|min:1',
+            'payment_method' => $noPaymentDue ? 'nullable|in:Cash,Bank Transfer,POS,POL' : 'required|in:Cash,Bank Transfer,POS,POL',
             'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ];
 
@@ -260,7 +264,7 @@ class JobsController extends Controller
             ], 422);
         }
 
-        if ($request->amount > $job->due_amount) {
+        if (!$noPaymentDue && $request->amount > $job->due_amount) {
             return response()->json([
                 'message' => 'Amount exceeds due amount'
             ], 422);
@@ -268,13 +272,28 @@ class JobsController extends Controller
 
         $receiptPath = $request->file('receipt')->store('receipts', 'public');
 
+        // Compute battery warranty expiry (install date = job completion time)
+        $warrantyMonths = null;
+        $warrantyExpiresAt = null;
+        if ($isBatteryPayment && !empty($batteryDetails['warranty'])) {
+            $warrantyMonths = (int) $batteryDetails['warranty'];
+            if ($warrantyMonths > 0) {
+                $installDate = $job->job_completed_at ?? now();
+                $warrantyExpiresAt = $installDate->copy()->addMonths($warrantyMonths);
+            }
+        }
+
         $payment = $job->payments()->create([
-            'amount' => $request->amount,
+            'amount' => $request->amount ?? 0,
             'payment_method' => $request->payment_method,
             'reference_number' => $request->reference_number,
             'notes' => $request->notes,
             'receipt' => $receiptPath,
             'battery_details' => $batteryDetails,
+            'warranty_months' => $warrantyMonths,
+            'warranty_expires_at' => $warrantyExpiresAt,
+            // If this job was created from a warranty claim, this new battery install can never be claimed again
+            'claim_of_payment_id' => $job->warranty_claim_source_payment_id,
         ]);
 
         $totalPaid = $job->payments()->sum('amount');

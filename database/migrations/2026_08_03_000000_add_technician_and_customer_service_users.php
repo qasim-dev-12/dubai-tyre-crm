@@ -81,7 +81,11 @@ class AddTechnicianAndCustomerServiceUsers extends Migration
 
         if ($customerServiceRole) {
             foreach ($customerService as $d) {
-                if (User::where('email', $d['email'])->exists()) {
+                $existing = User::where('email', $d['email'])->first();
+                if ($existing) {
+                    $existing->update(['account_role' => 1]);
+                    $existing->roles()->syncWithoutDetaching([$customerServiceRole->id]);
+                    $existing->permissions()->sync($customerServiceRole->permissions->pluck('id'));
                     continue;
                 }
 

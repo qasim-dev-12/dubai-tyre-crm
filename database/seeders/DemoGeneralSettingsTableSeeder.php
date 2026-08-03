@@ -19,7 +19,7 @@ class DemoGeneralSettingsTableSeeder extends Seeder
 
             // seed basic data to table
             $settingElements = [
-                'company_name' => 'Acculance',
+                'company_name' => '800Speedy',
                 'company_tagline' => 'Ultimate Sales, Inventory, Accounting Management System',
                 'email_address' => 'support@codeshape.net',
                 'phone_number' => '0170000000',
@@ -44,7 +44,7 @@ class DemoGeneralSettingsTableSeeder extends Seeder
                 'logo_black' => 'logo-black.png',
                 'small_logo' => 'small-logo.png',
                 'favicon' => 'favicon.png',
-                'copyright' => '© Copyright 2025 Acculance. Developed by Codeshaper',
+                'copyright' => '© Copyright 2025 800Speedy. Developed by Codeshaper',
                 'invoice_thank_you_message' => 'Thank you for your business',
                 'default_client_slug' => 'walking-customer',
                 'default_account_slug' => 'cash-0001',

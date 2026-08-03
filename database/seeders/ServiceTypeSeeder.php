@@ -48,6 +48,12 @@ class ServiceTypeSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'name' => 'Tyre Repair Warranty Claim',
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'Jump Start',
                 'status' => 1,
                 'created_at' => now(),

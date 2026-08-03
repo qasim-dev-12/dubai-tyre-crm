@@ -552,8 +552,20 @@ export default [
   middleware: 'auth'
 },
 {
+  path: '/technician/summary',
+  name: 'technician.summary.index',
+  component: () => import('../pages/technician/summary.vue'),
+  middleware: 'auth'
+},
+{
   path: '/jobs/create',
   name: 'jobs.create',
+  component: () => import('../pages/sales/jobs/create.vue'),
+  middleware: 'auth'
+},
+{
+  path: '/jobs/:id/edit',
+  name: 'jobs.edit',
   component: () => import('../pages/sales/jobs/create.vue'),
   middleware: 'auth'
 },
@@ -564,13 +576,6 @@ export default [
   middleware: 'auth'
 },
 {
-  path: '/warranty-claims',
-  name: 'warranty-claims.index',
-  component: () => import('../pages/sales/warranty/index.vue'),
-  middleware: 'auth'
-}
-,
-  {
     path: "/cashbook/accounts/create",
     name: "accounts.create",
     component: page("cashbook/accounts/create.vue"),

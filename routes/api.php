@@ -27,6 +27,7 @@ use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\VatRateController;
 use App\Http\Controllers\API\CurrencyController;
 use App\Http\Controllers\API\EmployeeController;
+use App\Http\Controllers\API\TechnicianCashController;
 use App\Http\Controllers\API\PurchaseController;
 use App\Http\Controllers\API\SupplierController;
 use App\Http\Controllers\API\AssetTypeController;
@@ -228,9 +229,15 @@ Route::get('/technician-battery-stocks/{id}', [TechnicianBatteryStockController:
 //     return \App\Models\User::select('id','name')->get();
 // });
 Route::put('/jobs/{id}/status', [JobsController::class, 'updateStatus']);
+Route::put('/jobs/{id}', [JobsController::class, 'update']);
 Route::delete('/jobs/{id}', [JobsController::class, 'destroy']);
 Route::get('/jobs/{id}', [JobsController::class, 'show']);
 Route::get('/technicians', [EmployeeController::class, 'technicians']);
+
+Route::get('/technician-cash-entries', [TechnicianCashController::class, 'index']);
+Route::post('/technician-cash-entries', [TechnicianCashController::class, 'store']);
+Route::delete('/technician-cash-entries/{id}', [TechnicianCashController::class, 'destroy']);
+Route::get('/technician-cash-summary', [TechnicianCashController::class, 'summary']);
 
 // payment route
 Route::post('/jobs/{id}/payments', [JobsController::class, 'addPayment']);
@@ -238,7 +245,6 @@ Route::post('/jobs/{id}/payments', [JobsController::class, 'addPayment']);
 Route::post('/jobs/{id}/update-eta', [JobsController::class, 'updateEta']);
 
 // Warranty claim routes
-Route::get('/warranty-claims', [WarrantyClaimController::class, 'index']);
 Route::post('/warranty-claims/{id}/claim', [WarrantyClaimController::class, 'claim']);
 
     // Balance routes

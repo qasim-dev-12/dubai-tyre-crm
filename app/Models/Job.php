@@ -23,6 +23,12 @@ class Job extends Model
         'Job Completed'
     ];
 
+    public const PAID_BY_OPTIONS = [
+        'Company',
+        'BT10', 'BT20', 'BT30', 'BT40', 'BT50',
+        'BT60', 'BT70', 'BT80', 'BT90', 'BT100', 'BT110'
+    ];
+
     protected $fillable = [
         'salutation',
         'name',
@@ -39,6 +45,7 @@ class Job extends Model
         'paid_amount',
         'due_amount',
         'payment_status',
+        'paid_by',
         'eta_minutes',
         'eta_started_at',
         'brand',

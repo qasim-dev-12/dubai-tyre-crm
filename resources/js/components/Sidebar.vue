@@ -3,13 +3,7 @@
   <aside class="main-sidebar">
     <!-- Brand Logo -->
     <router-link :to="{ name: 'home' }" class="brand-link">
-
-    <!-- HERE I cHANGED THE CODE -->
-
-      <!-- <img v-if="appInfo" :src="appInfo.blackLogo" :alt="appInfo.companyName" class="lg-logo light-logo" />
-      <img v-if="appInfo" :src="appInfo.logo" :alt="appInfo.companyName" class="lg-logo dark-logo" />
-      <img v-if="appInfo" :src="appInfo.smallLogo" alt="appInfo.companyName" class="sm-logo" /> -->
-      <p>800speedy</p>
+      <img v-if="appInfo" :src="appInfo.blackLogo" :alt="appInfo.companyName" class="lg-logo" />
     </router-link>
 
     <!-- Sidebar -->
@@ -69,6 +63,12 @@
               <router-link :to="{ name: 'technician.batteries.index' }" class="nav-link">
                 <i class="fas fa-battery-full nav-icon" />
                 <p>My Batteries</p>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link :to="{ name: 'technician.summary.index' }" class="nav-link">
+                <i class="fas fa-hand-holding-usd nav-icon" />
+                <p>My Daily Summary</p>
               </router-link>
             </li>
           </template>
@@ -257,16 +257,16 @@
     <p>Jobs</p>
   </router-link>
               </li>
-              <li v-if="!isTechnicianUser && $can('job-list')" class="nav-item">
-                  <router-link :to="{ name: 'warranty-claims.index' }" class="nav-link">
-    <i class="fas fa-shield-alt nav-icon" />
-    <p>Warranty Claims</p>
-  </router-link>
-              </li>
               <li v-if="isTechnicianUser" class="nav-item">
                   <router-link :to="{ name: 'technician.batteries.index' }" class="nav-link">
     <i class="fas fa-battery-full nav-icon" />
     <p>My Batteries</p>
+  </router-link>
+              </li>
+              <li v-if="isTechnicianUser" class="nav-item">
+                  <router-link :to="{ name: 'technician.summary.index' }" class="nav-link">
+    <i class="fas fa-hand-holding-usd nav-icon" />
+    <p>My Daily Summary</p>
   </router-link>
               </li>
 

@@ -28,5 +28,20 @@ class RoleSeeder extends Seeder
         ['slug' => 'technician'],
         ['name' => 'Technician']
     );
+
+    DB::table('roles')->updateOrInsert(
+        ['slug' => 'customer-service'],
+        ['name' => 'Customer Service']
+    );
+
+    DB::table('roles')->updateOrInsert(
+        ['slug' => 'accounts'],
+        ['name' => 'Accounts']
+    );
+
+    DB::table('roles')->updateOrInsert(
+        ['slug' => 'inventory'],
+        ['name' => 'Inventory']
+    );
     }
 }

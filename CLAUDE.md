@@ -80,6 +80,7 @@ Vuex modules:
 ### Key Business Flows
 - **Jobs**: Status flow `Assigned → DCC → On The Way → Reached → Job Started → Job Completed`. Jobs track `paid_amount` / `due_amount` and can consume battery stock from a technician's allocated inventory.
 - **Battery/Inventory**: Two-level tracking — main warehouse stock and per-technician allocated stock (`technician_battery_stocks`, `technician_battery_movements`).
+- **Warranty Claims**: warranty data lives on `payments` (`warranty_months`, `warranty_expires_at`, `is_warranty_claimed`, `claim_of_payment_id`), not on `jobs`. Claiming (`WarrantyClaimController@claim`) creates a brand-new priced job (`jobs.warranty_claim_source_payment_id` links it back to the source payment) rather than mutating the original — nothing is ever deleted, so both the original and replacement jobs stay independently visible and cross-linked (`Payment::replacementJob()` / `Job::warrantyClaimSourcePayment()`). A payment with `claim_of_payment_id` set can never be claimed again, enforcing one claim per install. There is no separate warranty page/tab — it's a `warranty=1` query param filter on `GET /api/jobs`.
 - **Invoices**: Products → subtotal → tax → transport fee → discount → total → payment tracking → PDF export via DomPDF.
 - **RBAC**: `roles`, `permissions`, `user_role`, `user_permission` tables with middleware enforcing access.
 
@@ -95,7 +96,9 @@ Critical `.env` keys beyond standard Laravel:
 - `APP_VERSION` — Displayed in UI
 
 ## Conventions
-- API responses use Laravel API Resources (`app/Http/Resources/`); always return through a Resource, not raw model data.
+- API responses use Laravel API Resources (`app/Http/Resources/`); always return through a Resource, not raw model data. (Note: some older controllers, e.g. `JobsController`, still return raw Eloquent arrays — follow the surrounding file's existing pattern rather than mixing styles within one controller.)
 - Frontend API calls go through Axios (no fetch). Base URL and JWT header injection are configured in `resources/js/app.js`.
 - Translations use Vue-i18n; string keys live in `resources/lang/` (13+ languages). Use `$t('key')` in templates.
 - PDF exports are server-rendered Blade views (not client-side); routes are in `routes/web.php` and `routes/spa.php`.
+- **Admin vs. technician views are usually the same Vue component**, not separate pages — branch on a computed `isTechnicianUser` (checks `user.account_role == 0` or `roles.includes('technician')`, excluding `super-admin`) and scope the backend query by `$user->employee->id` when the requester is a technician. See `resources/js/pages/sales/jobs/index.vue` / `show.vue` for the pattern before building a new role-specific page.
+- **Wide/dense tables** (e.g. the jobs list) use `table-layout: fixed` with explicit `nth-child` % column widths (desktop only, inside `@media (min-width: 769px)`) to prevent horizontal scroll, and switch to stacked cards via a `@media (max-width: 768px)` block (`data-label` attrs + `::before` pseudo-content) on mobile. Prefer wrapping long values (`white-space: normal; overflow-wrap: break-word`) over truncating with ellipsis. Reuse this pattern rather than adding new columns to already-wide tables — add filters or reference text inside existing columns instead.

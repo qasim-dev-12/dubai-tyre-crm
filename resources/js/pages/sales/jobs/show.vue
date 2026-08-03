@@ -10,6 +10,15 @@
 
       <div class="card-body" v-if="job">
 
+        <!-- Warranty Replacement Banner -->
+        <div v-if="job.warranty_claim_source_payment?.job" class="alert alert-info py-2 px-3 mb-3 small">
+          <i class="fas fa-shield-alt mr-1"></i>
+          This is a warranty replacement for
+          <router-link :to="{ name: 'jobs.show', params: { id: job.warranty_claim_source_payment.job.id } }">
+            Job #{{ job.warranty_claim_source_payment.job.id }}
+          </router-link>
+        </div>
+
         <!-- Job Info Grid -->
         <div class="excel-style">
           <div class="row mb-2">
@@ -51,6 +60,10 @@
               <a v-if="job.location_url" :href="job.location_url" target="_blank">View on Map</a>
               <span v-else>-</span>
             </div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-md-2 label">Paid By</div>
+            <div class="col-md-4 value">{{ job.paid_by || '-' }}</div>
           </div>
         </div>
 
@@ -169,8 +182,24 @@
             <td>
               <span v-if="!payment.warranty_expires_at">-</span>
               <span v-else-if="payment.claim_of_payment_id" class="badge bg-secondary">Replacement (no claim)</span>
+              <router-link
+                v-else-if="payment.is_warranty_claimed && payment.replacement_job"
+                :to="{ name: 'jobs.show', params: { id: payment.replacement_job.id } }"
+                class="badge bg-info"
+              >
+                Claimed → Job #{{ payment.replacement_job.id }}
+              </router-link>
               <span v-else-if="payment.is_warranty_claimed" class="badge bg-info">Claimed</span>
-              <span v-else-if="warrantyDaysLeft(payment) > 0" class="badge bg-success">{{ warrantyDaysLeft(payment) }} days left</span>
+              <span v-else-if="warrantyDaysLeft(payment) > 0">
+                <span class="badge bg-success mr-1">{{ warrantyDaysLeft(payment) }} days left</span>
+                <button
+                  v-if="!isTechnicianUser"
+                  class="btn btn-sm btn-outline-primary"
+                  @click="openClaimModal(payment)"
+                >
+                  Claim
+                </button>
+              </span>
               <span v-else class="badge bg-danger">Expired</span>
             </td>
             <td>
@@ -192,9 +221,10 @@
     <!-- Battery Completion Popup -->
     <div v-if="showBatteryModal" class="modal-overlay" @click.self="closeBatteryModal">
       <div class="modal-box" style="width:540px">
-        <h5 class="mb-3"><i class="fas fa-battery-full mr-2"></i>Complete Battery Job</h5>
-        <p class="text-muted small mb-3">Select the battery used, fill payment details, and submit to complete.</p>
+        <h5 class="mb-3"><i class="fas fa-check-circle mr-2"></i>{{ isBatteryJob ? 'Complete Battery Job' : 'Complete Job' }}</h5>
+        <p class="text-muted small mb-3">{{ isBatteryJob ? 'Select the battery used, fill payment details, and submit to complete.' : 'Fill payment details and submit to complete this job.' }}</p>
 
+        <template v-if="isBatteryJob">
         <!-- Battery Stock Dropdown -->
         <div class="mb-3">
           <label class="small font-weight-bold">Select Battery from Your Stock <span class="text-danger">*</span></label>
@@ -242,6 +272,7 @@
             <div v-if="formErrors.warranty" class="invalid-feedback d-block mb-1">{{ formErrors.warranty }}</div>
           </div>
         </div>
+        </template>
 
         <hr />
 
@@ -300,6 +331,35 @@
               {{ submittingBattery ? 'Saving...' : 'Complete Job & Save Payment' }}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Claim Warranty Modal -->
+    <div v-if="showClaimModal" class="modal-overlay" @click.self="closeClaimModal">
+      <div class="modal-box" style="width:420px">
+        <h5 class="mb-3"><i class="fas fa-shield-alt mr-2"></i>Claim Warranty</h5>
+        <p class="text-muted small mb-3">
+          Creates a replacement job for this battery. Set the price to charge for the replacement — this warranty can only be claimed once.
+        </p>
+        <div class="form-group">
+          <label class="small font-weight-bold">Job Price <span class="text-danger">*</span></label>
+          <input
+            v-model="claimForm.price"
+            type="number"
+            min="0.01"
+            step="0.01"
+            class="form-control form-control-sm mb-1"
+            :class="{ 'is-invalid': claimFormError }"
+            placeholder="e.g. 1500"
+          />
+          <div v-if="claimFormError" class="invalid-feedback d-block">{{ claimFormError }}</div>
+        </div>
+        <div class="d-flex justify-content-between mt-3">
+          <button class="btn btn-secondary btn-sm" @click="closeClaimModal">Cancel</button>
+          <button class="btn btn-primary btn-sm" @click="submitClaim" :disabled="claimingWarranty">
+            {{ claimingWarranty ? 'Claiming...' : 'Claim & Create Job' }}
+          </button>
         </div>
       </div>
     </div>
@@ -402,6 +462,11 @@ export default {
       etaMinutes: '',
       savingEta: false,
       submittingBattery: false,
+      claimingWarranty: false,
+      showClaimModal: false,
+      claimForm: { price: '' },
+      claimFormError: '',
+      claimingPayment: null,
       showBatteryModal: false,
       technicianBatteries: [],
       formErrors: {},
@@ -449,6 +514,14 @@ export default {
     isBatteryJob() {
       return this.job?.service_type?.name?.toLowerCase().includes('battery') ?? false
     },
+    isTechnicianUser() {
+      const user = this.$store.state.auth.user
+      return (
+        user &&
+        (user.account_role == 0 || (Array.isArray(user.roles) && user.roles.includes('technician'))) &&
+        !(Array.isArray(user.roles) && user.roles.includes('super-admin'))
+      )
+    },
     currentIndex() {
       const status = (this.job?.status || '').trim().toLowerCase()
       return STATUS_FLOW.findIndex(s => s.toLowerCase() === status)
@@ -466,6 +539,35 @@ export default {
   },
 
   methods: {
+    openClaimModal(payment) {
+      this.claimingPayment = payment
+      this.claimForm = { price: '' }
+      this.claimFormError = ''
+      this.showClaimModal = true
+    },
+    closeClaimModal() {
+      this.showClaimModal = false
+      this.claimingPayment = null
+    },
+    async submitClaim() {
+      const price = Number(this.claimForm.price)
+      if (!this.claimForm.price || price <= 0) {
+        this.claimFormError = 'Enter a price greater than 0'
+        return
+      }
+      this.claimFormError = ''
+      this.claimingWarranty = true
+      try {
+        await axios.post(`/api/warranty-claims/${this.claimingPayment.id}/claim`, { price })
+        this.$toast.success('Warranty claimed — replacement job created')
+        this.closeClaimModal()
+        await this.loadJob()
+      } catch (e) {
+        this.$toast.error(e.response?.data?.message || 'Failed to claim warranty')
+      } finally {
+        this.claimingWarranty = false
+      }
+    },
     async loadJob() {
       const { data } = await axios.get(`/api/jobs/${this.$route.params.id}`)
       this.job = data.data
@@ -505,11 +607,11 @@ export default {
       }
     },
 
-    // Status: if battery job and completing → show popup, otherwise direct update
+    // Status: completing a job always requires the payment form; other transitions update directly
     async handleNextStatus() {
-      if (this.nextStatus === 'Job Completed' && this.isBatteryJob) {
+      if (this.nextStatus === 'Job Completed') {
         this.batteryForm.amount = this.job.due_amount || ''
-        await this.loadTechnicianBatteries()
+        if (this.isBatteryJob) await this.loadTechnicianBatteries()
         this.showBatteryModal = true
       } else {
         this.changeStatus(this.nextStatus)
@@ -559,13 +661,15 @@ export default {
     validateBatteryForm() {
       const errors = {}
       const f = this.batteryForm
-      if (!f.selected_stock_id) errors.selected_stock_id = 'Please select a battery'
-      if (!f.battery_name?.trim()) errors.battery_name = 'Battery name is required'
-      if (!f.battery_brand?.trim()) errors.battery_brand = 'Battery brand is required'
-      if (!f.battery_type?.trim()) errors.battery_type = 'Battery type is required'
-      if (!f.voltage) errors.voltage = 'Voltage is required'
-      if (!f.capacity) errors.capacity = 'Capacity is required'
-      if (!f.warranty) errors.warranty = 'Warranty is required'
+      if (this.isBatteryJob) {
+        if (!f.selected_stock_id) errors.selected_stock_id = 'Please select a battery'
+        if (!f.battery_name?.trim()) errors.battery_name = 'Battery name is required'
+        if (!f.battery_brand?.trim()) errors.battery_brand = 'Battery brand is required'
+        if (!f.battery_type?.trim()) errors.battery_type = 'Battery type is required'
+        if (!f.voltage) errors.voltage = 'Voltage is required'
+        if (!f.capacity) errors.capacity = 'Capacity is required'
+        if (!f.warranty) errors.warranty = 'Warranty is required'
+      }
       if (Number(this.job.due_amount) > 0) {
         if (!f.amount || Number(f.amount) <= 0) errors.amount = 'Payment amount is required'
         if (!f.payment_method) errors.payment_method = 'Payment method is required'
@@ -597,15 +701,17 @@ export default {
         fd.append('payment_method', this.batteryForm.payment_method || '')
         fd.append('reference_number', this.batteryForm.reference_number || '')
         fd.append('notes', this.batteryForm.notes || '')
-        fd.append('battery_details', JSON.stringify({
-          selected_stock_id: this.batteryForm.selected_stock_id,
-          battery_name:  this.batteryForm.battery_name,
-          battery_brand: this.batteryForm.battery_brand,
-          battery_type:  this.batteryForm.battery_type,
-          voltage:       this.batteryForm.voltage,
-          capacity:      this.batteryForm.capacity,
-          warranty:      this.batteryForm.warranty,
-        }))
+        if (this.isBatteryJob) {
+          fd.append('battery_details', JSON.stringify({
+            selected_stock_id: this.batteryForm.selected_stock_id,
+            battery_name:  this.batteryForm.battery_name,
+            battery_brand: this.batteryForm.battery_brand,
+            battery_type:  this.batteryForm.battery_type,
+            voltage:       this.batteryForm.voltage,
+            capacity:      this.batteryForm.capacity,
+            warranty:      this.batteryForm.warranty,
+          }))
+        }
         fd.append('receipt', this.batteryForm.receipt)
 
         await axios.post(`/api/jobs/${this.job.id}/payments`, fd, {

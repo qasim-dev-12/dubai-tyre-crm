@@ -3,11 +3,11 @@
     <div class="row">
       <div class="col-lg-12">
         <div class="card custom-card">
-          <div class="card-header d-flex justify-content-between">
-            <h4>Create Job</h4>
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h4 class="mb-0"><i class="fas fa-briefcase mr-2 text-primary"></i>{{ isEdit ? 'Edit Job' : 'Create Job' }}</h4>
             <router-link
               :to="{ name: 'jobs.index' }"
-              class="btn btn-secondary btn-sm"
+              class="btn btn-secondary btn-sm ml-auto"
             >
               <i class="fas fa-long-arrow-alt-left"></i> Back
             </router-link>
@@ -15,6 +15,8 @@
 
           <div class="card-body">
             <form @submit.prevent="saveJob">
+              <div class="form-section">
+              <h6 class="form-section-title"><i class="fas fa-user"></i> Customer &amp; Job Info</h6>
               <!-- Row 1: Name, Service Type, Area -->
               <div class="row">
                 <div class="col-md-4 mb-3">
@@ -97,9 +99,9 @@
                 </div>
               </div>
 
-              <!-- Row 3: Vehicle Number, Status -->
+              <!-- Row 3: Vehicle Number, Status, Paid By -->
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                   <label class="form-label">Vehicle Number <span class="text-danger">*</span></label>
                   <input
                     v-model="form.vehicle_number"
@@ -113,7 +115,7 @@
                   </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                   <label class="form-label">Status</label>
                   <select v-model="form.status" class="form-control">
                     <option value="Assigned">Assigned</option>
@@ -124,11 +126,23 @@
                     <option value="Job Completed">Job Completed</option>
                   </select>
                 </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Paid By</label>
+                  <select v-model="form.paid_by" class="form-control">
+                    <option value="">Select Paid By</option>
+                    <option v-for="option in paidByOptions" :key="option" :value="option">
+                      {{ option }}
+                    </option>
+                  </select>
+                </div>
+              </div>
               </div>
 
               <!-- New Tyre Extra Fields -->
-              <div v-if="isNewTyre" class="row mt-3 p-3 bg-light rounded">
-                <h6 class="w-100 mb-3">Tyre Details</h6>
+              <div v-if="isNewTyre" class="form-section form-section-tyre">
+                <h6 class="form-section-title"><i class="fas fa-circle-notch"></i> Tyre Details</h6>
+                <div class="row">
 
                 <div class="col-md-3 mb-3">
                   <label class="form-label">Brand</label>
@@ -241,13 +255,15 @@
                     @input="calculateTyrePrice"
                   />
                 </div>
+                </div>
               </div>
 
               <!-- Actions -->
-              <div class="form-group mt-4">
-                <button type="submit" class="btn btn-primary" :disabled="loading">
+              <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary btn-submit" :disabled="loading">
                   <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ loading ? 'Saving...' : 'Create Job' }}
+                  <i v-else class="fas" :class="isEdit ? 'fa-save' : 'fa-plus'"></i>
+                  {{ loading ? 'Saving...' : (isEdit ? 'Update Job' : 'Create Job') }}
                 </button>
                 <router-link
                   :to="{ name: 'jobs.index' }"
@@ -390,6 +406,7 @@ export default {
           '215-60': ['16', '17']
         }
       },
+      paidByOptions: ['Company', 'BT10', 'BT20', 'BT30', 'BT40', 'BT50', 'BT60', 'BT70', 'BT80', 'BT90', 'BT100', 'BT110'],
       form: {
         name: '',
         mobile: '',
@@ -399,6 +416,7 @@ export default {
         price: '',
         technician: null,
         status: 'Assigned',
+        paid_by: '',
         brand: '',
         width: '',
         height: '',
@@ -411,6 +429,9 @@ export default {
     }
   },
   computed: {
+    isEdit() {
+      return !!this.$route.params.id
+    },
     isNewTyre() {
       return this.form.service_type && this.form.service_type.name.toLowerCase() === 'new tyre'
     }
@@ -418,8 +439,36 @@ export default {
   async mounted() {
     await this.fetchServiceTypes()
     await this.fetchTechnicians()
+    if (this.isEdit) {
+      await this.fetchJob()
+    }
   },
   methods: {
+    async fetchJob() {
+      try {
+        const { data } = await axios.get(`/api/jobs/${this.$route.params.id}`)
+        const job = data.data || data
+        this.form.name = job.name || ''
+        this.form.mobile = job.mobile || ''
+        this.form.service_type = this.serviceTypes.find(st => st.id === job.service_type_id) || job.service_type || null
+        this.form.area = job.area || ''
+        this.form.vehicle_number = job.vehicle_number || ''
+        this.form.price = job.price ?? ''
+        this.form.technician = this.technicians.find(t => t.id === job.technician_id) || job.technician || null
+        this.form.status = job.status || 'Assigned'
+        this.form.paid_by = job.paid_by || ''
+        this.form.brand = job.brand || ''
+        this.form.width = job.tyre_width || ''
+        this.form.height = job.tyre_height || ''
+        this.form.rim = job.tyre_rim || ''
+        this.form.size = job.size || ''
+        this.form.buying_price = job.buying_price ?? ''
+        this.form.selling_price = job.selling_price ?? ''
+        this.form.service_charges = job.service_charges ?? ''
+      } catch (error) {
+        this.$toast.error('Failed to load job for editing')
+      }
+    },
     onServiceTypeChange() {
       if (!this.isNewTyre) {
         // Clear tyre fields if service type is not "New Tyre"
@@ -496,6 +545,7 @@ export default {
           price: this.form.price || null,
           technician_id: this.form.technician?.id || null,
           status: this.form.status,
+          paid_by: this.form.paid_by || null,
           brand: this.form.brand || null,
           tyre_width: this.form.width || null,
           tyre_height: this.form.height || null,
@@ -506,15 +556,19 @@ export default {
           service_charges: this.form.service_charges || null
         }
 
-        await axios.post('/api/jobs', payload)
-
-        this.$toast.success('Job created successfully')
+        if (this.isEdit) {
+          await axios.put(`/api/jobs/${this.$route.params.id}`, payload)
+          this.$toast.success('Job updated successfully')
+        } else {
+          await axios.post('/api/jobs', payload)
+          this.$toast.success('Job created successfully')
+        }
         this.$router.push({ name: 'jobs.index' })
       } catch (error) {
         if (error.response?.data?.errors) {
           this.errors = error.response.data.errors
         } else {
-          this.$toast.error(error.response?.data?.message || 'Failed to create job')
+          this.$toast.error(error.response?.data?.message || `Failed to ${this.isEdit ? 'update' : 'create'} job`)
         }
       } finally {
         this.loading = false
@@ -525,6 +579,50 @@ export default {
 </script>
 
 <style scoped>
+.card.custom-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(20, 20, 43, 0.06);
+}
+
+.form-section {
+  background: #f8f9fc;
+  border: 1px solid #edeff2;
+  border-radius: 10px;
+  padding: 18px 18px 4px;
+  margin-bottom: 20px;
+}
+
+.form-section-tyre {
+  background: #fff8ea;
+  border-color: #f5e5bf;
+}
+
+.form-section-title {
+  font-weight: 700;
+  color: #495057;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+}
+
+.form-section-title i {
+  color: #0d6efd;
+  margin-right: 6px;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
+}
+
 .is-invalid {
   border-color: #dc3545 !important;
 }
@@ -533,5 +631,19 @@ export default {
   color: #dc3545;
   font-size: 0.875em;
   margin-top: 0.25rem;
+}
+
+.form-actions {
+  border-top: 1px solid #edeff2;
+  padding-top: 18px;
+}
+
+.btn-submit {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
 }
 </style>

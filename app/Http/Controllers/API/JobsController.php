@@ -19,15 +19,18 @@ class JobsController extends Controller
     /**
      * Display list of jobs
      */
+    protected const IN_PROGRESS_STATUSES = ['DCC', 'On The Way', 'Reached', 'Job Started'];
+
     public function index(Request $request)
     {
         $perPage = $request->get('perPage', 10);
         $term    = $request->get('term');
         $user = $request->user(); // ✅ correct for auth:api
 
-        $query = Job::with(['serviceType', 'technician', 'payments'])->latest();
+        $query = Job::with(['serviceType', 'technician', 'payments.replacementJob', 'warrantyClaimSourcePayment.job']);
 
-        if ($this->isTechnicianUser($user)) {
+        $isTechnician = $this->isTechnicianUser($user);
+        if ($isTechnician) {
             if ($user->employee) {
                 $query->where('technician_id', $user->employee->id);
             } else {
@@ -45,7 +48,121 @@ class JobsController extends Controller
             });
         }
 
-        return $query->paginate($perPage);
+        // 🔎 Dedicated filters: name, service type, area
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->get('name') . '%');
+        }
+        if ($request->filled('service_type_id')) {
+            $query->where('service_type_id', $request->get('service_type_id'));
+        }
+        if ($request->filled('area')) {
+            $query->where('area', 'like', '%' . $request->get('area') . '%');
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->get('payment_status'));
+        }
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', $request->get('price_min'));
+        }
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', $request->get('price_max'));
+        }
+
+        // 📅 Date range filter (today / week / month / custom)
+        [$dateFrom, $dateTo] = $this->resolveDateRange(
+            $request->get('date_filter'),
+            $request->get('date_from'),
+            $request->get('date_to')
+        );
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        }
+
+        // 🛡️ Warranty filter: jobs with a warrantied battery-install payment (source jobs),
+        // OR jobs created *from* a warranty claim (replacement jobs, even before they're completed
+        // and have a payment of their own).
+        if ($request->boolean('warranty')) {
+            $query->where(function ($q) {
+                $q->whereNotNull('warranty_claim_source_payment_id')
+                    ->orWhereHas('payments', function ($p) {
+                        $p->whereNotNull('warranty_expires_at');
+                    });
+            });
+
+            // 🔋🛞 Warranty type: "Battery" / "New Battery" / "Battery Warranty Claim" all
+            // contain "battery"; "Tyre Repair" / "Tyre Repair Warranty Claim" both contain
+            // "tyre repair" — so a keyword match on the job's own service type name covers
+            // both the original job and its warranty-claim replacement job.
+            if ($request->filled('warranty_type')) {
+                $keyword = $request->get('warranty_type') === 'tyre_repair' ? 'tyre repair' : 'battery';
+                $query->whereHas('serviceType', function ($st) use ($keyword) {
+                    $st->where('name', 'like', "%{$keyword}%");
+                });
+            }
+        }
+
+        // Stats reflect the current search/date scope, independent of the tab filter
+        $statsQuery = clone $query;
+
+        // 🗂️ Tab filter: new (untouched) / in_progress (started but not completed) / completed
+        $tab = $request->get('tab');
+        if ($tab === 'new') {
+            $query->where('status', 'Assigned');
+        } elseif ($tab === 'in_progress') {
+            $query->whereIn('status', self::IN_PROGRESS_STATUSES);
+        } elseif ($tab === 'completed') {
+            $query->where('status', 'Job Completed');
+        }
+
+        // 🔝 New/uncompleted jobs first, completed jobs last (newest within each group first)
+        $query->orderByRaw("CASE
+                WHEN status = 'Assigned' THEN 0
+                WHEN status IN ('" . implode("','", self::IN_PROGRESS_STATUSES) . "') THEN 1
+                WHEN status = 'Job Completed' THEN 2
+                ELSE 3
+            END")
+            ->latest();
+
+        $result = $query->paginate($perPage)->toArray();
+
+        $result['stats'] = [
+            'new' => (clone $statsQuery)->where('status', 'Assigned')->count(),
+            'in_progress' => (clone $statsQuery)->whereIn('status', self::IN_PROGRESS_STATUSES)->count(),
+            'completed' => (clone $statsQuery)->where('status', 'Job Completed')->count(),
+            'total' => (clone $statsQuery)->count(),
+        ];
+
+        return response()->json($result);
+    }
+
+    /**
+     * Resolve a [start, end] Carbon range for the given named filter, or an explicit custom range.
+     */
+    protected function resolveDateRange($filter, $from, $to)
+    {
+        $now = now();
+
+        switch ($filter) {
+            case 'today':
+                return [$now->copy()->startOfDay(), $now->copy()->endOfDay()];
+            case 'week':
+                return [$now->copy()->startOfWeek(), $now->copy()->endOfWeek()];
+            case 'month':
+                return [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()];
+            case 'custom':
+                if ($from && $to) {
+                    return [
+                        \Carbon\Carbon::parse($from)->startOfDay(),
+                        \Carbon\Carbon::parse($to)->endOfDay(),
+                    ];
+                }
+                return [null, null];
+            default:
+                return [null, null];
+        }
     }
 
     /**
@@ -69,7 +186,8 @@ class JobsController extends Controller
             'size' => 'nullable|string|max:255',
             'buying_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
-            'service_charges' => 'nullable|numeric|min:0'
+            'service_charges' => 'nullable|numeric|min:0',
+            'paid_by' => 'nullable|in:' . implode(',', Job::PAID_BY_OPTIONS)
         ]);
 
         $serviceType = ServiceType::find($request->service_type_id);
@@ -94,6 +212,7 @@ class JobsController extends Controller
                 'paid_amount' => 0,
                 'due_amount' => $request->price ?? 0,
                 'payment_status' => 'Unpaid',
+                'paid_by' => $request->paid_by,
                 'brand' => $request->brand,
                 'tyre_width' => $request->tyre_width,
                 'tyre_height' => $request->tyre_height,
@@ -121,6 +240,64 @@ class JobsController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Update an existing job's details (admin only route)
+     */
+    public function update(Request $request, $id)
+    {
+        $job = Job::findOrFail($id);
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'mobile' => 'required|string|max:20',
+            'service_type_id' => 'required|exists:service_types,id',
+            'vehicle_number' => 'required|string|max:255',
+            'area' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric|min:0',
+            'technician_id' => 'nullable|exists:employees,id',
+            'status' => 'nullable|in:' . implode(',', Job::STATUS_FLOW),
+            'brand' => 'nullable|string|max:255',
+            'tyre_width' => 'nullable|string|max:10',
+            'tyre_height' => 'nullable|string|max:10',
+            'tyre_rim' => 'nullable|string|max:10',
+            'size' => 'nullable|string|max:255',
+            'buying_price' => 'nullable|numeric|min:0',
+            'selling_price' => 'nullable|numeric|min:0',
+            'service_charges' => 'nullable|numeric|min:0',
+            'paid_by' => 'nullable|in:' . implode(',', Job::PAID_BY_OPTIONS)
+        ]);
+
+        $job->fill([
+            'name' => $request->name,
+            'mobile' => $request->mobile,
+            'service_type_id' => $request->service_type_id,
+            'vehicle_number' => $request->vehicle_number,
+            'area' => $request->area,
+            'price' => $request->price,
+            'technician_id' => $request->technician_id,
+            'status' => $request->status ?? $job->status,
+            'paid_by' => $request->paid_by,
+            'brand' => $request->brand,
+            'tyre_width' => $request->tyre_width,
+            'tyre_height' => $request->tyre_height,
+            'tyre_rim' => $request->tyre_rim,
+            'size' => $request->size ?? ($request->tyre_width && $request->tyre_height && $request->tyre_rim ? "{$request->tyre_width}/{$request->tyre_height}R{$request->tyre_rim}" : null),
+            'buying_price' => $request->buying_price,
+            'selling_price' => $request->selling_price,
+            'service_charges' => $request->service_charges,
+        ]);
+
+        // Keep due_amount consistent if the price changed
+        $job->due_amount = $job->price - $job->paid_amount;
+
+        $job->save();
+
+        return response()->json([
+            'message' => 'Job updated successfully',
+            'data' => $job->load('serviceType', 'technician')
+        ]);
     }
 
     /**
@@ -218,7 +395,8 @@ class JobsController extends Controller
             'serviceType',
             'technician',
             'journeys',
-            'payments'
+            'payments.replacementJob',
+            'warrantyClaimSourcePayment.job'
         ])->findOrFail($id);
 
         $this->authorizeAssignedTechnician($request, $job);
@@ -231,9 +409,11 @@ class JobsController extends Controller
     /**
      * Add payment to job
      */
+    protected const TYRE_REPAIR_WARRANTY_MONTHS = 2;
+
     public function addPayment(Request $request, $id)
     {
-        $job = Job::findOrFail($id);
+        $job = Job::with('serviceType')->findOrFail($id);
 
         $this->authorizeAssignedTechnician($request, $job);
 
@@ -245,6 +425,9 @@ class JobsController extends Controller
                 : $request->battery_details;
         }
         $isBatteryPayment = !empty($batteryDetails['selected_stock_id']);
+
+        // Tyre Repair jobs get an automatic fixed warranty (no battery details involved)
+        $isTyreRepairJob = str_contains(strtolower($job->serviceType->name ?? ''), 'tyre repair');
 
         // A job with nothing due (e.g. a free warranty-replacement battery job)
         // doesn't require a real payment — just the battery/receipt record.
@@ -272,15 +455,17 @@ class JobsController extends Controller
 
         $receiptPath = $request->file('receipt')->store('receipts', 'public');
 
-        // Compute battery warranty expiry (install date = job completion time)
+        // Compute warranty expiry (install/repair date = job completion time)
         $warrantyMonths = null;
         $warrantyExpiresAt = null;
         if ($isBatteryPayment && !empty($batteryDetails['warranty'])) {
             $warrantyMonths = (int) $batteryDetails['warranty'];
-            if ($warrantyMonths > 0) {
-                $installDate = $job->job_completed_at ?? now();
-                $warrantyExpiresAt = $installDate->copy()->addMonths($warrantyMonths);
-            }
+        } elseif ($isTyreRepairJob) {
+            $warrantyMonths = self::TYRE_REPAIR_WARRANTY_MONTHS;
+        }
+        if (!empty($warrantyMonths) && $warrantyMonths > 0) {
+            $installDate = $job->job_completed_at ?? now();
+            $warrantyExpiresAt = $installDate->copy()->addMonths($warrantyMonths);
         }
 
         $payment = $job->payments()->create([

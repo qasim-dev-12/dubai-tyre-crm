@@ -18,6 +18,7 @@ public function up()
 
     // Add new foreign key pointing to employees
     Schema::table('jobs', function (Blueprint $table) {
+        $table->dropForeign('jobs_technician_id_foreign');
         $table->foreign('technician_id')
               ->references('id')
               ->on('employees')

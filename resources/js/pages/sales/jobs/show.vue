@@ -68,7 +68,7 @@
           <div class="row mb-2" v-if="job.latitude && job.longitude">
             <div class="col-md-2 label">Map</div>
             <div class="col-md-10 value">
-              <location-viewer :lat="job.latitude" :lng="job.longitude" />
+              <location-viewer :lat="job.latitude" :lng="job.longitude" :label="`${job.name}${job.area ? ' - ' + job.area : ''}`" />
             </div>
           </div>
         </div>

@@ -29,7 +29,8 @@ export default {
   name: 'LocationPicker',
   props: {
     lat: { type: [Number, String], default: null },
-    lng: { type: [Number, String], default: null }
+    lng: { type: [Number, String], default: null },
+    label: { type: String, default: null }
   },
   data () {
     return { query: '', map: null, marker: null }
@@ -44,6 +45,7 @@ export default {
 
     if (this.lat && this.lng) {
       this.marker = L.marker(start, { icon }).addTo(this.map)
+      if (this.label) this.marker.bindPopup(this.label).openPopup()
     }
 
     this.map.on('click', (e) => this.setPoint(e.latlng.lat, e.latlng.lng))
@@ -58,6 +60,7 @@ export default {
       } else {
         this.marker = L.marker([lat, lng], { icon }).addTo(this.map)
       }
+      if (this.label) this.marker.bindPopup(this.label).openPopup()
       this.$emit('picked', { lat, lng })
     },
     async search () {

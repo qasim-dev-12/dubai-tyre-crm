@@ -167,7 +167,7 @@
             <!-- Job Location -->
             <div class="col-md-12 mt-4">
               <label>Job Location</label>
-              <location-picker :lat="form.latitude" :lng="form.longitude" @picked="onLocationPicked" />
+              <location-picker :lat="form.latitude" :lng="form.longitude" :label="form.name" @picked="onLocationPicked" />
             </div>
 
             <!-- Google Maps Link (auto-filled from the pin, editable) -->

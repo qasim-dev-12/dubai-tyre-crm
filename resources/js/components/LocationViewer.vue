@@ -18,7 +18,8 @@ export default {
   name: 'LocationViewer',
   props: {
     lat: { type: [Number, String], default: null },
-    lng: { type: [Number, String], default: null }
+    lng: { type: [Number, String], default: null },
+    label: { type: String, default: null }
   },
   mounted () {
     if (!this.lat || !this.lng) return
@@ -27,7 +28,10 @@ export default {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map)
-    L.marker(point, { icon }).addTo(map)
+    const marker = L.marker(point, { icon }).addTo(map)
+    if (this.label) {
+      marker.bindPopup(this.label).openPopup()
+    }
   }
 }
 </script>

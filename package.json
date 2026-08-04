@@ -24,6 +24,7 @@
     "jquery": "^3.6.4",
     "js-cookie": "^2.2.1",
     "jspdf": "2.5.1",
+    "leaflet": "^1.9.4",
     "moment": "^2.29.4",
     "playwright": "^1.59.1",
     "popper.js": "^1.12",

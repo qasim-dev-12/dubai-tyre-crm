@@ -65,6 +65,12 @@
             <div class="col-md-2 label">Paid By</div>
             <div class="col-md-4 value">{{ job.paid_by || '-' }}</div>
           </div>
+          <div class="row mb-2" v-if="job.latitude && job.longitude">
+            <div class="col-md-2 label">Map</div>
+            <div class="col-md-10 value">
+              <location-viewer :lat="job.latitude" :lng="job.longitude" />
+            </div>
+          </div>
         </div>
 
         <!-- ETA Update (assigned technician only) -->
@@ -452,10 +458,12 @@
 <script>
 import axios from 'axios'
 import { mapGetters } from 'vuex'
+import LocationViewer from '~/components/LocationViewer.vue'
 
 const STATUS_FLOW = ['Assigned', 'DCC', 'On The Way', 'Reached', 'Job Started', 'Job Completed']
 
 export default {
+  components: { LocationViewer },
   data() {
     return {
       job: null,

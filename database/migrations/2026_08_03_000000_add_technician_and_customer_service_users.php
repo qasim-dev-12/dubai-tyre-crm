@@ -47,18 +47,25 @@ class AddTechnicianAndCustomerServiceUsers extends Migration
 
         if ($technicianRole) {
             foreach ($technicians as $d) {
-                if (User::where('email', $d['email'])->exists()) {
-                    continue;
+                $user = User::where('email', $d['email'])->first();
+
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $d['name'],
+                        'email' => $d['email'],
+                        'password' => Hash::make($d['password']),
+                        'account_role' => 0,
+                    ]);
+                    $user->roles()->attach($technicianRole->id);
+                    $user->permissions()->attach($technicianRole->permissions);
+                } else {
+                    $user->roles()->syncWithoutDetaching([$technicianRole->id]);
+                    $user->permissions()->sync($technicianRole->permissions->pluck('id'));
                 }
 
-                $user = User::create([
-                    'name' => $d['name'],
-                    'email' => $d['email'],
-                    'password' => Hash::make($d['password']),
-                    'account_role' => 0,
-                ]);
-                $user->roles()->attach($technicianRole->id);
-                $user->permissions()->attach($technicianRole->permissions);
+                if ($user->employee) {
+                    continue;
+                }
 
                 Employee::create([
                     'name' => $d['name'],
